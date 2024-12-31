@@ -15,7 +15,8 @@ Global client_weakhand$
 Global inventory_amountofseenitems=5
 
 Global inventory_ui_selecteditem_scale#=2
-Global inventory_ui_item_scale#=1.5
+Global inventory_ui_item_scale#=1.3
+Global inventory_iconsize# = 64 * GraphicsWidth()/GraphicsHeight()
 
 Global sfx_inventory_priority = LoadSound("sounds/interactions/inventory_rearange.ogg")
 
@@ -29,6 +30,7 @@ Function inventory_gui(sorting$="")
 	amount_ofdisplitems=0
 	Repeat ; inventory loop
 		; ----- item info
+		inventory_iconsize# = (64 * ui_scaling) 
 		off1 = Instr(client_inventory,"<",old_off1+1)
 		If off1=0 Then Exit Else old_off1=off1 amount_ofitems=amount_ofitems+1
 		off2 = Instr(client_inventory,">",off1)
@@ -37,16 +39,16 @@ Function inventory_gui(sorting$="")
 		text3d vb20,0,0,id
 		itype.item_type = Object.item_type(id)
 		; -----------
-		If amount_ofitems=(inventory_row+1) Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)/inventory_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale/inventory_scaling) selected=0 
+		If amount_ofitems=(inventory_row+1) Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
 		If amount_ofitems>=(inventory_row+1)-((inventory_amountofseenitems-1)/2) And amount_ofitems<=(inventory_row+1)+((inventory_amountofseenitems-1)/2)  Then ; display seen items
 			amount_ofdisplitems=amount_ofdisplitems+1
-			DrawImage3d(debug_item,0,0+(130*amount_ofdisplitems)-(130*3), 0,0,scale,0)
+			DrawImage3d(debug_item,0,0+((inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems)-((inventory_iconsize+(10*ui_scaling))*3), 0,0,scale,0)
 			If selected=1 Then currentfont=vb20s Else currentfont=vb20 ; font
-			text3d currentfont,-StringWidth3d(currentfont,itype\name)/2,0+(130*amount_ofdisplitems)-(130*3)-70,itype\name
+			text3d currentfont,-StringWidth3d(currentfont,itype\name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/2,itype\name
 		End If
-		; show that there is more items that is unseen
-		;If amount_ofitems=(inventory_collumn+1)-3 Then DrawImage3d(inventory_cantseeitem, 0,-130, 0,0,1.25,0)
-		;If amount_ofitems=(inventory_collumn+1)+3 Then DrawImage3d(inventory_cantseeitem, 0,0+(130*amount_ofdisplitems+1)-130*2, 0,0,1.25,0)
+		;show that there is more items that is unseen
+		If amount_ofitems=(inventory_row+1)-((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem, 0,-inventory_iconsize*3, 0,0,-0.4,0)
+		If amount_ofitems=(inventory_row+1)+((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem,0,inventory_iconsize*(amount_ofdisplitems-1), 0,0,0.4,0)
 	Forever
 	If inventory_row<0 Then inventory_row = 0
 	If inventory_row>amount_ofitems-1 Then inventory_row= amount_ofitems-1
