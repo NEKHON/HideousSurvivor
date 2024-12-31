@@ -64,7 +64,7 @@ Global gfx_vignette=1
 
 ;------------------------------------------------------;
 
-Graphics3D 1920,1080,32,2
+Graphics3D 800,600,32,2
 SetBuffer BackBuffer()
 Global center_x = GraphicsWidth()/2
 Global center_y = GraphicsHeight()/2
@@ -87,6 +87,8 @@ Global vb20s=FontRange3D(LoadImage3D("Fonts\verdanabold20select.png",2,2,0,-100)
 Global clogf=FontRange3D(LoadImage3D("Fonts\verdanabold20.png",2,2,0,-100)):SetFont3D(clogf,0.5,0.8,-2,0)
 Global img=loadimage3d("Data\a.png",2,2,0,-1)
 Global vignette=LoadImage3D("ui/vignette.png",2,2,0,-1)
+Global debug_item=LoadImage3D("default\base_itemplaceholder.png",1,1,0,-1)
+Global inventory_cantseeitem=LoadImage3D("default\base_unknitem.png",1,1,0,-1)
 
 Global debug_playertex = LoadAnimTexture("player.png",16+32+4+512+1024,64,64,0,8)
 Global debug_infectedground = LoadTexture("Default/base_infectedground.png")
@@ -190,20 +192,21 @@ For k = 1 To tweeningTicks
 	tweeningTime = tweeningTime + tweeningPeriod
 	If k = tweeningTicks Then CaptureWorld
 	; ---------------- logics here
-	; control
+		; control
 	If mouselock>0 Then
 		mxspeed#=0
 		myspeed#=0
-		mxspeed# = mxspeed# + center_x - MouseX()
-		myspeed# = myspeed# + center_y - MouseY()
-		cam_pitch = cam_pitch - myspeed# * 0.2
+		mxspeed# = mxspeed# + (center_x - MouseX()) * 0.21
+		myspeed# = myspeed# + (center_y - MouseY()) * 0.21
+		cam_pitch = cam_pitch - myspeed#
 		If cam_pitch>80 Then cam_pitch=80
 		If cam_pitch<-80 Then cam_pitch=-80
 		control_signals()
 		MoveMouse center_x,center_y
+		HidePointer
 	End If 
 	; ---- DEBUG
-	If KeyHit(57) And localmode=2 Then create_droppeditem(EntityX(player_camera),EntityY(player_camera),EntityZ(player_camera),"","miljacket")
+	If KeyHit(57) And localmode=2 Then create_droppeditem(EntityX(player_camera),EntityY(player_camera),EntityZ(player_camera),"",Rand(1,2),"",Rand(0,100))
 	; characterss
 	If localMode=1 Then TurnEntity player_camera,0,1,0
 	names$ = ""
@@ -213,9 +216,9 @@ For k = 1 To tweeningTicks
 			mc_handle = Handle(char)
 			HideEntity char\mesh
 			PositionEntity player_camera,EntityX(char\mesh),EntityY(char\mesh)+(char\height / 100)-0.1,EntityZ(char\mesh)
-			char\directiony = char\directiony+mxspeed#*0.2
-			cam_dir = char\directionY
+			char\directiony = char\directiony+mxspeed#
 			RotateEntity char\mesh,0,char\directionY,0 ; mesh rotation
+			cam_dir = char\directionY
 			RotateEntity player_camera,cam_pitch,EntityYaw(char\mesh),0 ; camera rotaiton
 			MoveEntity char\mesh,(char\walk_speed*signal_strafe)*deltaTime,0,(char\walk_speed*signal_walk)*deltaTime ; movement
 			If signal_strafe<>0 Or signal_walk<>0 Then MoveEntity player_camera,Sin(MilliSecs()/3)*0.05,Abs(Sin(MilliSecs()/3)*0.05),0 ; cameraboob
@@ -223,22 +226,22 @@ For k = 1 To tweeningTicks
 			
 			; --
 			itemtip=""
-			rhitname=char\stronghand
-			lhitname=char\weakhand
+			rhitname=client_stronghand
+			lhitname=client_weak
 			wield_interaction()
 			; switch hands
 			; ---- SWITCH HANDS
 			If signal_switchhands<>0 Then
-				If Len(char\weakhand)>0 And Len(char\stronghand)>0 Then 
-					s$ = char\stronghand
-					char\stronghand = char\weakhand
-					char\weakhand = s
-				ElseIf Len(char\weakhand)>0 And Len(char\stronghand)=0
-					char\stronghand = char\weakhand
-					char\weakhand=""
+				If Len(client_weak)>0 And Len(client_stronghand)>0 Then 
+					s$ = client_stronghand
+					client_stronghand = client_weak
+					client_weak = s
+				ElseIf Len(client_weak)>0 And Len(client_stronghand)=0
+					client_stronghand = client_weak
+					client_weak=""
 				Else
-					char\weakhand = char\stronghand
-					char\stronghand=""
+					client_weak = client_stronghand
+					client_stronghand=""
 				End If
 			End If
 			
@@ -253,7 +256,7 @@ For k = 1 To tweeningTicks
 					net_sendmessage(130,s,localid,1)
 				End If
 			End If
-			If KeyHit(27) Then clog(char\wear)
+			If KeyHit(27) Then clog(client_inventory)
 		Else ; other char/nps
 ;			; sprite direction
 ;			a = Abs((char\directiony/45 Mod 8) - (cam_dir/45 Mod 8))
@@ -314,11 +317,10 @@ If (api_getfocus()<>0 Or render_whenunfocused=1) Then; skip render if fps too lo
 	text3d vb20,center_x-stringwidth3d(vb20,itemtip),-center_y+50,itemtip
 	;Text3D vb20,-center_x,-center_y+25,"handlers ["+handlerslist+"]"
 	Text3D vb20,-center_x,-center_y+10,"mods: ["+modlist+"] >w<"
-	Text 10,100,mxspeed+" / "+myspeed
 	If Len(highlight)>0 Then Text3d vb20,-StringWidth3d(vb20,highlight)/2,0,highlight Else oval3D(img, 0, 0, 2, 2)
 	; 
-	If gfx_vignette=1 Then DrawImage3d(vignette,0,0,0,0,GraphicsWidth()/512+GraphicsHeight()/512-1)
-	If KeyHit(66) Then gfx_vignette=-gfx_vignette
+	;If gfx_vignette=1 Then DrawImage3d(vignette,0,0,0,0,GraphicsWidth()/512+GraphicsHeight()/512-1)
+	;If KeyHit(66) Then gfx_vignette=-gfx_vignette
 	draw_log() ; log
 ; ---- inventory
 	If inventory_open=1 Then inventory_gui()
@@ -374,10 +376,17 @@ Else
 	Text GraphicsWidth()/2,GraphicsHeight()/2,"Window Unfocused"
 End If
 Flip(render_vsync)
-If mouselock=1 And inventory_open=0 Then HidePointer Else ShowPointer
 Goto MainLoop
 End
 
+ 
+;~C#Blitz3D
+ 
+;~C#Blitz3D
+ 
+;~C#Blitz3D
+ 
+;~C#Blitz3D
  
 ;~C#Blitz3D
  

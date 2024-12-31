@@ -1,7 +1,6 @@
 If FileType("MODS")=0 Then CreateDir("MODS")
 If FileType("MODS")<>2 And FileType("MODS")>0 Then RuntimeError("WHAT? MODS Folder is not a folder! TF You did??")
 Global modlist$=""
-Global handlerslist$="" ; list of handlers to item types
 
 Global firstnames$
 Global surnames$
@@ -47,13 +46,13 @@ Function load_mods(modsdir$)
 				items$ = NTI_parseinstring$(itemsnti)
 				oldoffset1 = 0
 				Repeat
-					offset1 = Instr(items,"$handler",oldoffset1+1)
+					offset1 = Instr(items,"$name",oldoffset1+1)
 					oldoffset1=offset1
 					If offset1=0 Then Exit
 					it.item_type = New item_type
-					handlerslist = handlerslist + ":"+NTI_parameterproperty(items,offset1)+"/"+Handle(it)+";"
+					tmp = Handle it
 					; -
-					it\name$ = NTI_parameterproperty(items,Instr(items,"$name",offset1))
+					it\name$ = NTI_parameterproperty(items,offset1)
 					it\description$ = NTI_parameterproperty(items,Instr(items,"$description",offset1))
 					
 					it\globaltype$ = NTI_parameterproperty(items,Instr(items,"$globaltype",offset1))
@@ -109,7 +108,6 @@ End Function
 
 ; TYPES
 Type item_type
-	Field handler$
 	; - visual
 	Field name$
 	Field diletantname$
