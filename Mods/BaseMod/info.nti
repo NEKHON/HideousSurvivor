@@ -1,0 +1,9 @@
+# that files contains mod info, to show it in mod list.
+$name:Hideous Survior;
+$author:Nekhon;
+$version:0.7;
+$date:09.11.2024;
+$uncompatiblewith:;
+$requiresmods:TestDependency;
+$description:Base Mod. Contains all vanilla enemies, items, linedefs and furnitures.;
+$icon:logo.png;

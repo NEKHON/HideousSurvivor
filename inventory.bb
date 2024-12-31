@@ -12,6 +12,11 @@ Global client_wear$
 Global client_stronghand$
 Global client_weakhand$
 
+Global inventory_amountofseenitems=5
+
+Global inventory_ui_selecteditem_scale#=2
+Global inventory_ui_item_scale#=1.5
+
 Global sfx_inventory_priority = LoadSound("sounds/interactions/inventory_rearange.ogg")
 
 ; item data: :HANDLER/FLAGS/CONDITION/STACKSIZE/[LOCALINVENTORY];
@@ -32,16 +37,16 @@ Function inventory_gui(sorting$="")
 		text3d vb20,0,0,id
 		itype.item_type = Object.item_type(id)
 		; -----------
-		If amount_ofitems=(inventory_row+1) Then scale#=2+(Sin(MilliSecs()*0.25)*0.05) selected=1 Else scale#=1.5 selected=0 
-		If amount_ofitems>=(inventory_row+1)-2 And amount_ofitems<=(inventory_row+1)+2 Then ; display seen items
+		If amount_ofitems=(inventory_row+1) Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)/inventory_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale/inventory_scaling) selected=0 
+		If amount_ofitems>=(inventory_row+1)-((inventory_amountofseenitems-1)/2) And amount_ofitems<=(inventory_row+1)+((inventory_amountofseenitems-1)/2)  Then ; display seen items
 			amount_ofdisplitems=amount_ofdisplitems+1
 			DrawImage3d(debug_item,0,0+(130*amount_ofdisplitems)-(130*3), 0,0,scale,0)
 			If selected=1 Then currentfont=vb20s Else currentfont=vb20 ; font
 			text3d currentfont,-StringWidth3d(currentfont,itype\name)/2,0+(130*amount_ofdisplitems)-(130*3)-70,itype\name
 		End If
 		; show that there is more items that is unseen
-		If amount_ofitems=(inventory_collumn+1)-3 Then DrawImage3d(inventory_cantseeitem, 0,-130, 0,0,1.25,0)
-		If amount_ofitems=(inventory_collumn+1)+3 Then DrawImage3d(inventory_cantseeitem, 0,0+(130*amount_ofdisplitems+1)-130*2, 0,0,1.25,0)
+		;If amount_ofitems=(inventory_collumn+1)-3 Then DrawImage3d(inventory_cantseeitem, 0,-130, 0,0,1.25,0)
+		;If amount_ofitems=(inventory_collumn+1)+3 Then DrawImage3d(inventory_cantseeitem, 0,0+(130*amount_ofdisplitems+1)-130*2, 0,0,1.25,0)
 	Forever
 	If inventory_row<0 Then inventory_row = 0
 	If inventory_row>amount_ofitems-1 Then inventory_row= amount_ofitems-1

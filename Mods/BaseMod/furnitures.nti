@@ -1,0 +1,23 @@
+# Example file to show how NekTextInterchange trademark copyright wawa works
+# this is comment lines. every line started with that symbol is ignored
+
+# lines started with dot is a labels, they are used as start point for finding parameter by name
+.item_pistol
+$id:pistol;
+$description:9x20 pistol. widely used by military and police;
+$firearm_caliber:9x20 Parumpudicum;
+$firearm_availmodes:0,1,2,3;
+#$par4:im a comment.. i dont exist.;
+
+# another comment 
+.item_9x20parumpudicum
+$id:9x20ammo;
+$description:Powerful pistol ammo.;
+$testpar:dollars$$;
+
+.item_9x20parumpudicummag
+# all that comments
+$id: 9x20mag;
+$description:Mag for 9x20 pistol;
+$par2:its par2;
+$fooo:its a par to show that i can add any pars;

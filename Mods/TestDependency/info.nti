@@ -1,0 +1,9 @@
+# that files contains mod info, to show it in mod list.
+$name:Test Dependency;
+$author:Nekhon;
+$version:1;
+$date:09.11.2024;
+$uncompatiblewith:;
+$requiresmods:BaseMod;
+$description:Test dependency for Base Mod.;
+$icon:logo.png;

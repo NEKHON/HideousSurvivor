@@ -85,7 +85,7 @@ DrawInit3D(ui_camera)
 Global vb20=FontRange3D(LoadImage3D("Fonts\verdanabold20.png",2,2,0,-100)):SetFont3D(vb20,0.6,1,-2,0)
 Global vb20s=FontRange3D(LoadImage3D("Fonts\verdanabold20select.png",2,2,0,-100)):SetFont3D(vb20s,0.6,1,-2,0)
 Global clogf=FontRange3D(LoadImage3D("Fonts\verdanabold20.png",2,2,0,-100)):SetFont3D(clogf,0.5,0.8,-2,0)
-Global img=loadimage3d("Data\a.png",2,2,0,-1)
+Global img=loadimage3d("Default\a.png",2,2,0,-1)
 Global vignette=LoadImage3D("ui/vignette.png",2,2,0,-1)
 Global debug_item=LoadImage3D("default\base_itemplaceholder.png",1,1,0,-1)
 Global inventory_cantseeitem=LoadImage3D("default\base_unknitem.png",1,1,0,-1)
@@ -379,6 +379,8 @@ Flip(render_vsync)
 Goto MainLoop
 End
 
+ 
+;~C#Blitz3D
  
 ;~C#Blitz3D
  

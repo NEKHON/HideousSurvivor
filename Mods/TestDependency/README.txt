@@ -1,0 +1,1 @@
+That mod shows how mod dependency works (check BaseMod/info.nti)

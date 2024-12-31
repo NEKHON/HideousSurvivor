@@ -1,0 +1,23 @@
+# Dummy
+$name:Dummy Item;
+$diletantname:WHAT??;
+$description:Hey! It is not in game item!;
+$spritesheet:NOTEXTURE;
+$stackable:1;
+$globaltype:craftitem;
+$droppedsize:1;
+$localtype:dumbass;
+$volume:1;
+$localinventory_type:0;
+
+$name:Military Jacket;
+$diletantname:Military Jacket;
+$description:Military Jacket with deep pockets.;
+$diletantdescription:Military Jacket with deep pockets.;
+$spritesheet:ITEMS/WEAPONS/IMPROVISEDBANDAGE.png;
+$stackable:0;
+$globaltype:clothes;
+$droppedsize:0.3;
+$localtype:jacket;
+$volume:60;
+$localinventory_type:1;

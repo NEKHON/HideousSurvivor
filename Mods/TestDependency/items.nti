@@ -1,0 +1,13 @@
+# Dummy
+$handler:dependdummy;
+$name:TestDependencyDummy;
+$diletantname:WHAT??;
+$description:Hey! It is not in game item!;
+$diletantdescription:WHAT??;
+$spritesheet:NOTEXTURE;
+$stackable:1;
+$globaltype:craftitem;
+$droppedsize:1;
+$localtype:dumbass;
+$volume:1;
+$localinventory_type:0;
