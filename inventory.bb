@@ -23,14 +23,37 @@ Global sfx_inventory_priority = LoadSound("sounds/interactions/inventory_rearang
 ; item data: :HANDLER/FLAGS/CONDITION/STACKSIZE/[LOCALINVENTORY];
 
 ; TODO: it should be inventory_collumn, instead of row, and inventory_row should be inventory_collumn, but im lazy.
-Function inventory_gui(sorting$="")
+Function inventory_interface(sorting$="")
 	cam_pitch = cam_pitch + 0.25 ; move camera down
+	Local amount_ofitems=0
+	Local amount_ofdisplitems=0
+	Local amount_ofclothes=0
+	DrawImage3d(inventory_background,0,0, 0,0,3.5 * ui_scaling,0)
+	inventory_iconsize# = (64 * ui_scaling) 
+	Local scale#
+	
+	; -------- hands
+	
+	If inventory_collumn=2 And inventory_row=1 Then text3d vb20s,inventory_iconsize*3.2,inventory_iconsize,"> Left Hand "+client_weakhand Else text3d vb20,inventory_iconsize*3.2,inventory_iconsize,"Left Hand "+client_weakhand
+	If inventory_collumn=2 And inventory_row=0 Then text3d vb20s,inventory_iconsize*3.2,0,"> Right Hand "+client_stronghand Else text3d vb20,inventory_iconsize*3.2,0,"Right Hand "+client_stronghand
+	
 	old_off1=0
-	amount_ofitems=0
-	amount_ofdisplitems=0
+	Repeat ; wear loop
+		; ----- item info
+		off1 = Instr(client_wear,"<",old_off1+1)
+		If off1=0 Then Exit Else old_off1=off1 amount_ofclothes=amount_ofclothes+1
+		off2 = Instr(client_wear,">",off1)
+		item$ = Mid(client_wear,off1+1,off2-off1-1)
+		id% = Mid(item,1,Instr(item,"(",1)-1)
+		itype.item_type = Object.item_type(id)
+		; -----------
+		If amount_ofclothes=(inventory_row+1) And inventory_collumn=0 Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
+		DrawImage3d(debug_item,-inventory_iconsize*4,0+((inventory_iconsize+(25*ui_scaling))*amount_ofclothes)-((inventory_iconsize+(10*ui_scaling))*4), 0,0,scale,0)
+	Forever
+	
+	old_off1=0
 	Repeat ; inventory loop
 		; ----- item info
-		inventory_iconsize# = (64 * ui_scaling) 
 		off1 = Instr(client_inventory,"<",old_off1+1)
 		If off1=0 Then Exit Else old_off1=off1 amount_ofitems=amount_ofitems+1
 		off2 = Instr(client_inventory,">",off1)
@@ -39,8 +62,8 @@ Function inventory_gui(sorting$="")
 		text3d vb20,0,0,id
 		itype.item_type = Object.item_type(id)
 		; -----------
-		If amount_ofitems=(inventory_row+1) Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
-		If amount_ofitems>=(inventory_row+1)-((inventory_amountofseenitems-1)/2) And amount_ofitems<=(inventory_row+1)+((inventory_amountofseenitems-1)/2)  Then ; display seen items
+		If amount_ofitems=(inventory_row+1) And inventory_collumn=1 Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
+		If (amount_ofitems>=(inventory_row+1)-((inventory_amountofseenitems-1)/2) And amount_ofitems<=(inventory_row+1)+((inventory_amountofseenitems-1)/2)) Then ; display seen items
 			amount_ofdisplitems=amount_ofdisplitems+1
 			DrawImage3d(debug_item,0,0+((inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems)-((inventory_iconsize+(10*ui_scaling))*3), 0,0,scale,0)
 			If selected=1 Then currentfont=vb20s Else currentfont=vb20 ; font
@@ -50,12 +73,34 @@ Function inventory_gui(sorting$="")
 		If amount_ofitems=(inventory_row+1)-((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem, 0,-inventory_iconsize*3, 0,0,-0.4,0)
 		If amount_ofitems=(inventory_row+1)+((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem,0,inventory_iconsize*(amount_ofdisplitems-1), 0,0,0.4,0)
 	Forever
-	If inventory_row<0 Then inventory_row = 0
-	If inventory_row>amount_ofitems-1 Then inventory_row= amount_ofitems-1
+	; ---------------------
+	; inventory limites
+	Select inventory_collumn
+		Case 0 ; wear
+			If inventory_row<0 Then inventory_row = 0
+			If inventory_row>amount_ofclothes-1 Then inventory_row= amount_ofclothes-1
+		Case 1 ; items
+			If inventory_row<0 Then inventory_row = 0
+			If inventory_row>amount_ofitems-1 Then inventory_row= amount_ofitems-1
+		Case 2 ; hands
+			If inventory_row<0 Then inventory_row=0
+			If inventory_row>1 Then inventory_row=1
+	End Select
+	; 3 collumns
+	If inventory_collumn<0 Then inventory_collumn=0
+	If inventory_collumn>2 Then inventory_collumn=2
+	
+;	If inventory_collumn=1 And amount_ofitems=0 Then ; if items selected, but no items then switch to next collumn
+;		If old_collumn=0 Then inventory_collumn=2
+;		If old_collumn=2 Then inventory_collumn=0
+;	End If
+;	If inventory_collumn=0 And amount_ofclothes=0 Then inventory_collumn=2 ; if clothes collumn selected but no clothes weared then select hands
+	old_collumn = inventory_collumn
 End Function
 
 Function wield_interaction()
-	
+	itemtip=""
+	If Len(client_stronghand)>0 Then itemtip="[O] To wear" If signal_wear Then client_wear = client_wear + "<" + client_stronghand + ">" client_stronghand="" 
 End Function
 
 Function update_droppeditems(dt#)
@@ -126,7 +171,7 @@ Function droppeditem_pickup(handler)
 ;				End If
 ;			End If
 ;		Next
-		client_inventory=client_inventory + "<"+di\idata+">"
+		If client_stronghand="" Then client_stronghand=di\idata ElseIf client_weakhand="" Then client_weakhand=di\idata
 	End If
 End Function
 ;~IDEal Editor Parameters:

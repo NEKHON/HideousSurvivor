@@ -1,8 +1,11 @@
 Global window_hwnd = SystemProperty("AppHWND")
-Const gameLogicFPS = 60
-Const core_version$ = "0.7"
+Const gameLogicFPS = 60 ; dont touch it. never.
+Const core_version$ = "tbd" ; not sure how to do versioning
+Global core_gamename$ = "Hideous Survivor" ; lmao im making chinese pirates job easier
 Global debug_quickhost% ; host server and throw right in game after start, ignoring main menu (NYI)
 Global debug_basemodonly% ; load only base mod
+Global debug_mode
+Global info_fps%
 ; console
 If Instr(CommandLine(),"-debug_mode",1)>0 Then debug_mode=1
 If Instr(CommandLine(),"-debug_quickgame",1)>0 Then debug_quickhost=1
@@ -23,35 +26,37 @@ Include "world.bb"
 Include "inventory.bb"
 load_mods("Mods")
 
-;If debug_quickhost=1 Then
-;	AppTitle("Hideous Survior. Host : " + localName + " (port:" + net_defaultport + "/ ID=" + localID + ") DEBUG QUICK HOST")
-;	localname = "quick host"
-;	localmode = 2
-;	localid = Net_CreatePlayer(localName) 
-;	Goto debug_quickhostgoto
-;End If 
-
-localName = get_randomname$(0)+Int(iasc( get_randomname$(1)))
-localMode = Net_StartInput() ; bring the library "console" to connect
-
-If localMode = 1 Or localMode = 2 ; 1 means we are client, 2 means we are server
+If debug_quickhost=1 Then
+	AppTitle(core_gamename+". Host : " + localName + " (port:" + net_defaultport + "/ ID=" + localID + ") DEBUG QUICK HOST")
+	localname = "quick host"
+	localmode = 2
+	localid = Net_CreatePlayer(localName) 
+Else
 	
-	localID = Net_CreatePlayer(localName) ; this command inits the server or local client
+	localName = get_randomname$(0)+Int(iasc( get_randomname$(1)))
+	localMode = Net_StartInput() ; bring the library "console" to connect
 	
-	If localID = 0 ; error
-		Net_StopNetwork() ; close the network properly
-		RuntimeError("Failed to create player.")
+	If localMode = 1 Or localMode = 2 ; 1 means we are client, 2 means we are server
+		
+		localID = Net_CreatePlayer(localName) ; this command inits the server or local client
+		
+		If localID = 0 ; error
+			Net_StopNetwork() ; close the network properly
+			RuntimeError("Failed to create player.")
+		EndIf
+		If debug_mode=1 Then
+			If localMode = 1 Then AppTitle(core_gamename+". Client : " + localName + " (port:" + net_defaultport + "/ ID=" + localID + ")")
+			If localMode = 2 Then AppTitle(core_gamename+". Host : " + localName + " (port:" + net_defaultport + "/ ID=" + localID + ")")
+		Else
+			AppTitle(core_gamename)
+		End If
+			
+	Else ; error
+		Net_StopNetwork()
+		RuntimeError("Failed to start game.")
 	EndIf
-	
-	If localMode = 1 Then AppTitle("Hideous Survior. Client : " + localName + " (port:" + net_defaultport + "/ ID=" + localID + ")")
-	If localMode = 2 Then AppTitle("Hideous Survior. Host : " + localName + " (port:" + net_defaultport + "/ ID=" + localID + ")")
-	
-Else ; error
-	Net_StopNetwork()
-	RuntimeError("Failed to start game.")
-EndIf
+End If
 
-.debug_quickhostgoto
 ; state
 Global state_characterupdated
 Global state_mouselock=1
@@ -64,7 +69,7 @@ Global gfx_vignette=-1
 
 ;------------------------------------------------------;
 
-Graphics3D 800,600,32,2
+Graphics3D 1920,1080,32,2
 SetBuffer BackBuffer()
 Global center_x = GraphicsWidth()/2
 Global center_y = GraphicsHeight()/2
@@ -81,6 +86,8 @@ PositionEntity	 ui_camera,0,1000,0
 CameraClsMode ui_camera,0,1
 DrawInit3D(ui_camera)
 
+Include "ui.bb"
+
 ; FOnts
 Global ui_scaling# = (GraphicsWidth()/GraphicsHeight()*1.1)
 Global vb20=FontRange3D(LoadImage3D("Fonts\verdanabold20.png",2,2,0,-100)):SetFont3D(vb20,ui_scaling#*0.6,ui_scaling#*1,-2,0)
@@ -90,6 +97,7 @@ Global img=loadimage3d("Default\a.png",2,2,0,-1)
 Global vignette=LoadImage3D("ui/vignette.png",2,2,0,-1)
 Global debug_item=LoadImage3D("default\base_itemplaceholder.png",1,1,0,-1)
 Global inventory_cantseeitem=LoadImage3D("default\base_unknitem.png",1,1,0,-1)
+Global inventory_background=LoadImage3D("ui\ui_inventory.png",2,2,0,-1)
 
 Global debug_playertex = LoadAnimTexture("player.png",16+32+4+512+1024,64,64,0,8)
 Global debug_infectedground = LoadTexture("Default/base_infectedground.png")
@@ -170,15 +178,17 @@ Global sigmillisec
 oldsigmil=MilliSecs()
 .MainLoop ; --------------
 If KeyHit(1) Then End
+If KeyHit(57) And localmode=2 Then create_droppeditem(EntityX(player_camera),EntityY(player_camera),EntityZ(player_camera),"",Rand(1,2),"",Rand(0,100))
 
 sigmillisec=0
 If MilliSecs()-oldsigmil<>0 Then sigmillisec=1 oldsigmil = MilliSecs()
 frameselapsed = frameselapsed + 1
 If MilliSecs()>=fpstime+1000 Then
-	fps = frameselapsed
+	info_fps = frameselapsed
 	frameselapsed = 0
 	fpstime = MilliSecs()
 End If
+
 network_funcs()
 ; --------------- TWEENING
 Repeat
@@ -195,7 +205,7 @@ For k = 1 To tweeningTicks
 	If k = tweeningTicks Then CaptureWorld
 	; ---------------- logics here
 		; control
-	If mouselock>0 Then
+	If state_mouselock>0 Then
 		mxspeed#=0
 		myspeed#=0
 		mxspeed# = mxspeed# + (center_x - MouseX()) * 0.21
@@ -207,10 +217,7 @@ For k = 1 To tweeningTicks
 		MoveMouse center_x,center_y
 		HidePointer
 	End If 
-	; ---- DEBUG
-	If KeyHit(57) And localmode=2 Then create_droppeditem(EntityX(player_camera),EntityY(player_camera),EntityZ(player_camera),"",Rand(1,2),"",Rand(0,100))
 	; characterss
-	If localMode=1 Then TurnEntity player_camera,0,1,0
 	names$ = ""
 	success=0
 	For char.character = Each character ; update characters
@@ -247,7 +254,7 @@ For k = 1 To tweeningTicks
 				End If
 			End If
 			
-			If localmode=1 Then
+			If localmode=1 Then ; PLAYER CONTROLS
 				dist# = flatdist(my_oldx,EntityX(char\mesh,1),my_oldz,EntityZ(char\mesh,1))+lindist(char\directiony,my_olddir)
 				If MilliSecs()>client_beforenextpositionsend+client_mcpositionrate And dist=>mp_positionupdatemin# Then
 					client_beforenextpositionsend=MilliSecs()
@@ -258,9 +265,8 @@ For k = 1 To tweeningTicks
 					net_sendmessage(130,s,localid,1)
 				End If
 			End If
-			If KeyHit(27) Then clog(client_inventory)
 		Else ; other char/nps
-;			; sprite direction
+;			; sprite direction 
 ;			a = Abs((char\directiony/45 Mod 8) - (cam_dir/45 Mod 8))
 ;			If a=0 Then a=8
 ;			If a<>char\olddir Then EntityTexture char\mesh,debug_playertex,a-1 char\olddir=a
@@ -276,9 +282,8 @@ For k = 1 To tweeningTicks
 				names$ = names$ + ":"+(ProjectedX()-center_x)+"/"+(center_y-ProjectedY())+"/"+char\char_name+ h+";"
 			End If
 		End If
-		
 		If char\directiony>360 Then char\directiony=0 ElseIf char\directiony<0 Then char\directiony=360
-		If success=0 Then 
+		If success=0 Then ; ASK HOST FOR CHARACTER
 			net_sendmessage(115,"")
 		End If 
 	Next
@@ -299,115 +304,26 @@ For k = 1 To tweeningTicks
 				End If
 		End Select
 	End If
-	timer()
+	timer() ; update world time
 Next ; ---------
 
 ; -------------- RENDER ; -------------------------------
-If (api_getfocus()<>0 Or render_whenunfocused=1) Then; skip render if fps too low or game is not focused
+If (api_getfocus()<>0 Or render_whenunfocused=1) Then; skip render if game is not focused
 	RenderWorld tweeningRate
 	Clear3D()
-; Some debug info
-; -----------------------------------------
-	If KeyHit(2) Then mouselock=-mouselock:If mouselock=0 Then mouselock=-1
-	Text3D vb20,-center_x,center_y-10,"fps: "+ fps+ ", logic fps: "+gameLogicFPS+", dt: "+deltaTime ; fps
-	Text3D vb20,-center_x,center_y-25,"host?: "+inttobool(localmode)+" | ping: "+my_ping ; mp mode
-	Text3D vb20,-center_x,center_y-40,"servvars: PosUpdMin: "+mp_positionupdatemin+", ServOclussion: (NYI)"+inttobool(mp_serverocclusion)
-	Text3D vb20,-center_x,center_y-55,"wtime: "+worldhours+":"+worldminutes+":"+worldseconds
-	Text3D vb20,-center_x,center_y-65,monthname+" "+worldday+", "+worldyear+" (leap year?: "+inttobool(worldleapyear)+"), temp: "+worldtemperature+"c"
-	Text3D vb20,-center_x,-center_y+60,lhitname,0,0,10
-	Text3D vb20,center_x-StringWidth3d(vb20,rhitname),-center_y+60,rhitname,0,0,-10
-	text3d vb20,center_x-stringwidth3d(vb20,itemtip),-center_y+50,itemtip
-	;Text3D vb20,-center_x,-center_y+25,"handlers ["+handlerslist+"]"
-	Text3D vb20,-center_x,-center_y+10,"mods: ["+modlist+"] >w<"
-	If Len(highlight)>0 Then Text3d vb20,-StringWidth3d(vb20,highlight)/2,0,highlight Else oval3D(img, 0, 0, 2, 2)
-	; 
-	;If gfx_vignette=1 Then DrawImage3d(vignette,0,0,0,0,GraphicsWidth()/512+GraphicsHeight()/512-1)
-	;If KeyHit(66) Then gfx_vignette=-gfx_vignette
-	draw_log() ; log
 ; ---- inventory
-	If inventory_open=1 Then inventory_gui()
-; -----------------------------------------
-	oldoffset1=0
-	Repeat ; draw characters names from string, so no need to for - each again.
-		offset1 = Instr(names,":",oldoffset1+1)
-		If offset1=0 Then Exit
-		oldoffset1 = offset1
-		offset2 = Instr(names,";",oldoffset1+1)
-		firstslash = Instr(names,"/",offset1)
-		secondslash = Instr(names,"/",firstslash+1)
-		x=Mid(names,offset1+1,firstslash-offset1-1) ; x
-		y=Mid(names,firstslash+1,secondslash-firstslash-1) ; y
-		s$=Mid(names,secondslash+1,offset2-secondslash-1) ; name
-		Color 200,200,200
-		Text3D(vb20,x-StringWidth3d(vb20,s)/2,y,s)
-		Color 255,255,255
-	Forever
-; players list
-	i=0
-	For nc.net_client = Each net_client
-		i=i+1
-		If nc\id=localID Then h$="(You)" Color 255,0,0
-		s$ = h+" "+nc\NAME+"(ID: "+nc\id+"/MC :"+nc\masteredcharacter+")"+" ping: "+nc\ping
-		h=""
-		my_ping = nc\ping
-		Text3D(vb20,center_x-StringWidth3d(vb20,s),center_y-10-i*15,s)
-	Next
-	For lc.local_client = Each local_client
-		i=i+1
-		If lc\id=localID Then h$="(You)" Color 255,0,0
-		s$ = h+" "+lc\name+"(ID: "+lc\id+"/MC :"+lc\masteredcharacter+")"+" ping: "+lc\ping
-		h=""
-		my_ping = lc\ping
-		Text3D(vb20,center_x-StringWidth3d(vb20,s),center_y-10-i*15,s)
-	Next
-	a=0
-	For char.character = Each character
-		a=a+1
-	Next
-; cheat
-;;i=0
-;;For char.character = Each character
-;;	i=i+1
-;;	CameraProject player_camera,EntityX(char\mesh),1,EntityZ(char\mesh)
-;;	Line center_x,center_y,ProjectedX(),ProjectedY()
-;;	Text center_x+25,center_y+(i*25),char\char_name
-;;Next
-; -------------------------------
-	Text3D(vb20,center_x/2+50,center_y-10,LOC_PLAYERS+":"+i+","+LOC_CHARACTERS+":"+a)
+	If inventory_open=1 Then inventory_interface()
+If debug_mode=1 Then : debug_info() : Else:Text3D vb20,-center_x,center_y-10,"FPS: "+ info_fps:End If
+	draw_ui()
+	draw_charnames()
+	draw_playerslist()
 Else
 	Text GraphicsWidth()/2,GraphicsHeight()/2,"Window Unfocused"
 End If
 Flip(render_vsync)
-Goto MainLoop
-End
-
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
- 
-;~C#Blitz3D
+; ---------------------------------------------
+Goto MainLoop ; ------------------------
+RuntimeError("End of MainLoop.")
 ;~IDEal Editor Parameters:
-;~L#-debug_quickgame
- 
+;~L#-debug_mode
 ;~C#Blitz3D
