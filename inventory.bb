@@ -47,10 +47,20 @@ Function inventory_interface(sorting$="")
 		id% = Mid(item,1,Instr(item,"(",1)-1)
 		itype.item_type = Object.item_type(id)
 		; -----------
-		If amount_ofclothes=(inventory_row+1) And inventory_collumn=0 Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
+		If inventory_collumn=0 Then wearinventory_row = inventory_row
+		If amount_ofclothes=(wearinventory_row+1) And inventory_collumn=0 Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
+		If selected=1 And MouseHit(1) ; add item
+			If Len(client_stronghand)>0 Then
+				client_inventory = client_inventory + "<"+client_stronghand+">"
+				client_stronghand=""
+			ElseIf Len(client_weakhand)>0 Then
+				client_inventory = client_inventory + "<"+client_weakhand+">"
+				client_weakhand=""
+			End If
+		End If
 		DrawImage3d(debug_item,-inventory_iconsize*4,0+((inventory_iconsize+(25*ui_scaling))*amount_ofclothes)-((inventory_iconsize+(10*ui_scaling))*4), 0,0,scale,0)
+		; todo, changing scale if too much clothes
 	Forever
-	
 	old_off1=0
 	Repeat ; inventory loop
 		; ----- item info
@@ -62,16 +72,17 @@ Function inventory_interface(sorting$="")
 		text3d vb20,0,0,id
 		itype.item_type = Object.item_type(id)
 		; -----------
-		If amount_ofitems=(inventory_row+1) And inventory_collumn=1 Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
-		If (amount_ofitems>=(inventory_row+1)-((inventory_amountofseenitems-1)/2) And amount_ofitems<=(inventory_row+1)+((inventory_amountofseenitems-1)/2)) Then ; display seen items
+		If inventory_collumn=1 Then pocketinventory_row = inventory_row
+		If amount_ofitems=(pocketinventory_row+1) And inventory_collumn=1 Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
+		If (amount_ofitems>=(pocketinventory_row+1)-((inventory_amountofseenitems-1)/2) And amount_ofitems<=(pocketinventory_row+1)+((inventory_amountofseenitems-1)/2)) Then ; display seen items
 			amount_ofdisplitems=amount_ofdisplitems+1
 			DrawImage3d(debug_item,0,0+((inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems)-((inventory_iconsize+(10*ui_scaling))*3), 0,0,scale,0)
 			If selected=1 Then currentfont=vb20s Else currentfont=vb20 ; font
 			text3d currentfont,-StringWidth3d(currentfont,itype\name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/2,itype\name
 		End If
 		;show that there is more items that is unseen
-		If amount_ofitems=(inventory_row+1)-((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem, 0,-inventory_iconsize*3, 0,0,-0.4,0)
-		If amount_ofitems=(inventory_row+1)+((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem,0,inventory_iconsize*(amount_ofdisplitems-1), 0,0,0.4,0)
+		If amount_ofitems=(pocketinventory_row+1)-((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem, 0,-inventory_iconsize*3, 0,0,-0.4,0)
+		If amount_ofitems=(pocketinventory_row+1)+((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem,0,inventory_iconsize*(amount_ofdisplitems-1), 0,0,0.4,0)
 	Forever
 	; ---------------------
 	; inventory limites
