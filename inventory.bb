@@ -11,6 +11,9 @@ Global client_inventory$
 Global client_wear$
 Global client_stronghand$
 Global client_weakhand$
+Global selected_cloth ; global so it wont reset when no clothes selected
+Global pocketinventory_row
+Global wearinventory_row
 
 Global inventory_amountofseenitems=5
 
@@ -28,6 +31,8 @@ Function inventory_interface(sorting$="")
 	Local amount_ofitems=0
 	Local amount_ofdisplitems=0
 	Local amount_ofclothes=0
+	Local amount_ofbelongitems=0
+	Local pocket_items$=""
 	DrawImage3d(inventory_background,0,0, 0,0,3.5 * ui_scaling,0)
 	inventory_iconsize# = (64 * ui_scaling) 
 	Local scale#
@@ -48,28 +53,43 @@ Function inventory_interface(sorting$="")
 		itype.item_type = Object.item_type(id)
 		; -----------
 		If inventory_collumn=0 Then wearinventory_row = inventory_row
-		If amount_ofclothes=(wearinventory_row+1) And inventory_collumn=0 Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
-		If selected=1 And MouseHit(1) ; add item
-			If Len(client_stronghand)>0 Then
-				client_inventory = client_inventory + "<"+client_stronghand+">"
-				client_stronghand=""
-			ElseIf Len(client_weakhand)>0 Then
-				client_inventory = client_inventory + "<"+client_weakhand+">"
-				client_weakhand=""
+		If amount_ofclothes=(wearinventory_row+1) And inventory_collumn=0 Then selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
+		If selected_cloth = amount_ofclothes Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) 
+		If selected=1 Then
+			selected_cloth=amount_ofclothes
+			If MouseHit(1)
+				If Len(client_stronghand)>0 Then
+					client_inventory = client_inventory + "<"+client_stronghand+amount_ofclothes+">"
+					client_stronghand=""
+				ElseIf Len(client_weakhand)>0 Then
+					client_inventory = client_inventory + "<"+client_weakhand+amount_ofclothes+">"
+					client_weakhand=""
+				End If
 			End If
 		End If
 		DrawImage3d(debug_item,-inventory_iconsize*4,0+((inventory_iconsize+(25*ui_scaling))*amount_ofclothes)-((inventory_iconsize+(10*ui_scaling))*4), 0,0,scale,0)
 		; todo, changing scale if too much clothes
 	Forever
 	old_off1=0
-	Repeat ; inventory loop
-		; ----- item info
+	; ----- DISPALY POCKET
+	Repeat ; separate items from current pocket from other items
 		off1 = Instr(client_inventory,"<",old_off1+1)
-		If off1=0 Then Exit Else old_off1=off1 amount_ofitems=amount_ofitems+1
+		If off1=0 Then Exit Else old_off1=off1
 		off2 = Instr(client_inventory,">",off1)
 		item$ = Mid(client_inventory,off1+1,off2-off1-1)
+		belongsto% = Mid(item,Instr(item,"]",1)+1,1)
+		If belongsto = selected_cloth Then pocket_items$ = pocket_items$ + "<"+item+">"
+	Forever
+	old_off1=0
+	Repeat ; display items in pocket
+		If Len(pocket_items)=0 Then Exit ; no items in pocket, skip
+		;		RuntimeError(pocket_items)
+		off1 = Instr(pocket_items$, "<",old_off1+1)
+		If off1=0 Then Exit Else old_off1=off1 amount_ofitems=amount_ofitems+1
+		off2 = Instr(pocket_items$ ,">",off1)
+		item$ = Mid(pocket_items$ ,off1+1,off2-off1-1)
 		id% = Mid(item,1,Instr(item,"(",1)-1)
-		text3d vb20,0,0,id
+		;		text3d vb20,0,0,id
 		itype.item_type = Object.item_type(id)
 		; -----------
 		If inventory_collumn=1 Then pocketinventory_row = inventory_row
@@ -92,7 +112,7 @@ Function inventory_interface(sorting$="")
 			If inventory_row>amount_ofclothes-1 Then inventory_row= amount_ofclothes-1
 		Case 1 ; items
 			If inventory_row<0 Then inventory_row = 0
-			If inventory_row>amount_ofitems-1 Then inventory_row= amount_ofitems-1
+			If inventory_row>amount_ofitems-1 Then inventory_row=amount_ofitems-1
 		Case 2 ; hands
 			If inventory_row<0 Then inventory_row=0
 			If inventory_row>1 Then inventory_row=1
@@ -101,17 +121,33 @@ Function inventory_interface(sorting$="")
 	If inventory_collumn<0 Then inventory_collumn=0
 	If inventory_collumn>2 Then inventory_collumn=2
 	
-;	If inventory_collumn=1 And amount_ofitems=0 Then ; if items selected, but no items then switch to next collumn
+;	If inventory_collumn=1 And amount_ofitems=0 Then ; if items selected, but no items then switch to next collumn todo that dont works
 ;		If old_collumn=0 Then inventory_collumn=2
 ;		If old_collumn=2 Then inventory_collumn=0
 ;	End If
 ;	If inventory_collumn=0 And amount_ofclothes=0 Then inventory_collumn=2 ; if clothes collumn selected but no clothes weared then select hands
+	If inventory_collumn=2 And (Len(client_weakhand)=0 And Len(client_stronghand)=0) Then inventory_collumn=1
 	old_collumn = inventory_collumn
 End Function
 
 Function wield_interaction()
 	itemtip=""
 	If Len(client_stronghand)>0 Then itemtip="[O] To wear" If signal_wear Then client_wear = client_wear + "<" + client_stronghand + ">" client_stronghand="" 
+	
+	; ----- swithc hands
+	If signal_switchhands<>0 Then
+		If Len(client_weakhand)>0 And Len(client_stronghand)>0 Then 
+			s$ = client_stronghand
+			client_stronghand = client_weakhand
+			client_weakhand = s
+		ElseIf Len(client_weakhand)>0 And Len(client_stronghand)=0
+			client_stronghand = client_weakhand
+			client_weakhand=""
+		Else
+			client_weakhand= client_stronghand
+			client_stronghand=""
+		End If
+	End If
 End Function
 
 Function update_droppeditems(dt#)
@@ -133,7 +169,8 @@ Function create_droppeditem(x#=0,y#=2,z#=0,idata$="",handler$="dummy",flags$="",
 	;
 	If condition=-1 Then condition=Rand(2,98)
 	If Len(idata)=0 Then di\idata = handler+"("+flags+")"+condition+"/"+stack+"["+localinv+"]" Else di\idata=idata
-	map_items$=ar_add(map_items$,di\idata)
+	
+	map_items$=map_items$ + "<"+di\idata+">"
 	If localmode = 2 ; if host, send evewyone info about item
 		net_sendmessage(140,x+";"+y+";"+z+"|"+di\idata,1)
 	End If 
@@ -183,6 +220,8 @@ Function droppeditem_pickup(handler)
 ;			End If
 ;		Next
 		If client_stronghand="" Then client_stronghand=di\idata ElseIf client_weakhand="" Then client_weakhand=di\idata
+		FreeEntity di\entity
+		Delete di
 	End If
 End Function
 ;~IDEal Editor Parameters:

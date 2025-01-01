@@ -14,7 +14,7 @@ SeedRnd MilliSecs()
 ; Includes
 Include "localisation.bb"
 Include "essentials.bb"
-Include "stringarrays.bb"
+;Include "stringarrays.bb"
 Include "UDPNetwork_lib.bb"
 Include "networking.bb"
 Include "draw3d2.bb"
@@ -32,7 +32,6 @@ If debug_quickhost=1 Then
 	localmode = 2
 	localid = Net_CreatePlayer(localName) 
 Else
-	
 	localName = get_randomname$(0)+Int(iasc( get_randomname$(1)))
 	localMode = Net_StartInput() ; bring the library "console" to connect
 	
@@ -69,7 +68,7 @@ Global gfx_vignette=-1
 
 ;------------------------------------------------------;
 
-Graphics3D 1920,1080,32,2
+Graphics3D 1280,760,32,2
 SetBuffer BackBuffer()
 Global center_x = GraphicsWidth()/2
 Global center_y = GraphicsHeight()/2
@@ -238,21 +237,6 @@ For k = 1 To tweeningTicks
 			rhitname=client_stronghand
 			lhitname=client_weak
 			wield_interaction()
-			; switch hands
-			; ---- SWITCH HANDS
-			If signal_switchhands<>0 Then
-				If Len(client_weak)>0 And Len(client_stronghand)>0 Then 
-					s$ = client_stronghand
-					client_stronghand = client_weak
-					client_weak = s
-				ElseIf Len(client_weak)>0 And Len(client_stronghand)=0
-					client_stronghand = client_weak
-					client_weak=""
-				Else
-					client_weak = client_stronghand
-					client_stronghand=""
-				End If
-			End If
 			
 			If localmode=1 Then ; PLAYER CONTROLS
 				dist# = flatdist(my_oldx,EntityX(char\mesh,1),my_oldz,EntityZ(char\mesh,1))+lindist(char\directiony,my_olddir)
@@ -326,4 +310,5 @@ Goto MainLoop ; ------------------------
 RuntimeError("End of MainLoop.")
 ;~IDEal Editor Parameters:
 ;~L#-debug_mode
+ 
 ;~C#Blitz3D
