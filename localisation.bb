@@ -1,3 +1,4 @@
+; todo: blitz3d dont eat that unicode with russian and kazakhhk letters, especcialy draw3d2, fix that.
 Global LOC_INVENTORYHEADER$="Inventory"
 Global LOC_INVCONTROLS$ = "Mouse Wheel - Scroll, LMB - Item priority to top, RMB - Wield, F - Change Wielded item hand"
 Global LOC_LOGPICKUP$="I Picked up "
