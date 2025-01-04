@@ -100,12 +100,18 @@ Function inventory_interface(sorting$="")
 			If selected=1 Then currentfont=vb20s Else currentfont=vb20 ; font
 			text3d currentfont,-StringWidth3d(currentfont,itype\name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/2,itype\name
 		End If
-		;show that there is more items that is unseen
-		If amount_ofitems=(pocketinventory_row+1)-((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem, 0,-inventory_iconsize*3, 0,0,-0.4,0)
-		If amount_ofitems=(pocketinventory_row+1)+((inventory_amountofseenitems-1)/2)+1 Then DrawImage3d(inventory_cantseeitem,0,inventory_iconsize*(amount_ofdisplitems-1), 0,0,0.4,0)
 	Forever
+	If amount_ofitems>0 Then
+		;show that there is more items that is cant be seen
+		b = pocketinventory_row ; amsssount of items before pocket_inventory_row
+		a = amount_ofitems - pocketinventory_row - 1 ; amount of items after pocketinventory_row
+		;Text 10,200,"before: "+b
+		;Text 10,250,"after: "+a
+		If b > ((inventory_amountofseenitems-1)/2) Then DrawImage3d(inventory_cantseeitem, 0,-inventory_iconsize*3, 0,0,-0.4,0)
+		If a > ((inventory_amountofseenitems-1)/2) And a=<amount_ofitems Then DrawImage3d(inventory_cantseeitem,0,inventory_iconsize*(amount_ofdisplitems-1), 0,0,0.4,0)
+	End If
 	; ---------------------
-	; inventory limites
+	; inventory limits
 	Select inventory_collumn
 		Case 0 ; wear
 			If inventory_row<0 Then inventory_row = 0
@@ -134,7 +140,7 @@ Function wield_interaction()
 	itemtip=""
 	If Len(client_stronghand)>0 Then itemtip="[O] To wear" If signal_wear Then client_wear = client_wear + "<" + client_stronghand + ">" client_stronghand="" 
 	
-	; ----- swithc hands
+	; ----- switch hands
 	If signal_switchhands<>0 Then
 		If Len(client_weakhand)>0 And Len(client_stronghand)>0 Then 
 			s$ = client_stronghand

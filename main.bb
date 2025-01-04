@@ -227,7 +227,7 @@ For k = 1 To tweeningTicks
 			char\directiony = char\directiony+mxspeed#
 			RotateEntity char\mesh,0,char\directionY,0 ; mesh rotation
 			cam_dir = char\directionY
-			RotateEntity player_camera,cam_pitch,EntityYaw(char\mesh),0 ; camera rotaiton
+			RotateEntity player_camera,cam_pitch,EntityYaw(char\mesh),0 ; camera rotaitonh
 			MoveEntity char\mesh,(char\walk_speed*signal_strafe)*deltaTime,0,(char\walk_speed*signal_walk)*deltaTime ; movement
 			If signal_strafe<>0 Or signal_walk<>0 Then MoveEntity player_camera,Sin(MilliSecs()/3)*0.05,Abs(Sin(MilliSecs()/3)*0.05),0 ; cameraboob
 			success=1
@@ -308,6 +308,8 @@ Flip(render_vsync)
 ; ---------------------------------------------
 Goto MainLoop ; ------------------------
 RuntimeError("End of MainLoop.")
+ 
+;~C#Blitz3D
 ;~IDEal Editor Parameters:
 ;~L#-debug_mode
  
