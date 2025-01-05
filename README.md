@@ -1,5 +1,5 @@
 # HideousSurvivor
-Hardcore survival game that includes
+Hardcore survival game that (WILL) include~~s~~
   * Aliens (Or Demons, im bad at doing lore)
   * Arterial, Vein, Cappilary bleedings
   * Improvised Bandages, Vodka
