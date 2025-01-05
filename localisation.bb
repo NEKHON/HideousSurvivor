@@ -19,5 +19,17 @@ Global LOC_MONTH_SEMPTEMBER$="Octosem"
 Global LOC_MONTH_OCTOBER$="October"
 Global LOC_MONTH_NOVEMBER$="November"
 Global LOC_MONTH_DECEMBER$="Dovember"
+
+Dim LOC_CONDITIONS$(9)
+LOC_CONDITIONS$(9)="Factory New"
+LOC_CONDITIONS$(8)="Almost New"
+LOC_CONDITIONS$(7)="Minimal Wear"
+LOC_CONDITIONS$(6)="Used"
+LOC_CONDITIONS$(5)="Well Worn"
+LOC_CONDITIONS$(4)="Battle Scarred"
+LOC_CONDITIONS$(3)="Filthy"
+LOC_CONDITIONS$(2)="Almost Broken"
+LOC_CONDITIONS$(1)="Destroyed"
+LOC_CONDITIONS$(0)="Useless"
 ;~IDEal Editor Parameters:
 ;~C#Blitz3D

@@ -249,6 +249,7 @@ For k = 1 To tweeningTicks
 					net_sendmessage(130,s,localid,1)
 				End If
 			End If
+			; ------------------
 		Else ; other char/nps
 ;			; sprite direction 
 ;			a = Abs((char\directiony/45 Mod 8) - (cam_dir/45 Mod 8))

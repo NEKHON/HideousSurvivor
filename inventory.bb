@@ -49,7 +49,7 @@ Function inventory_interface(sorting$="")
 		If off1=0 Then Exit Else old_off1=off1 amount_ofclothes=amount_ofclothes+1
 		off2 = Instr(client_wear,">",off1)
 		item$ = Mid(client_wear,off1+1,off2-off1-1)
-		id% = Mid(item,1,Instr(item,"(",1)-1)
+		id% = Mid(item,1,Instr(item,"(",1)-1) 
 		itype.item_type = Object.item_type(id)
 		; -----------
 		If inventory_collumn=0 Then wearinventory_row = inventory_row
@@ -89,6 +89,10 @@ Function inventory_interface(sorting$="")
 		off2 = Instr(pocket_items$ ,">",off1)
 		item$ = Mid(pocket_items$ ,off1+1,off2-off1-1)
 		id% = Mid(item,1,Instr(item,"(",1)-1)
+		flags_start% = Instr(item,"(",1)
+		flags_end% = Instr(item,")",flags_start)
+		condition = Mid(item,flags_end+1,Instr(item,"/",flags_end)-flags_end-1)
+		condition_name$ = LOC_CONDITIONS$(clamp((condition/10)-1,0,9))
 		;		text3d vb20,0,0,id
 		itype.item_type = Object.item_type(id)
 		; -----------
@@ -99,6 +103,7 @@ Function inventory_interface(sorting$="")
 			DrawImage3d(debug_item,0,0+((inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems)-((inventory_iconsize+(10*ui_scaling))*3), 0,0,scale,0)
 			If selected=1 Then currentfont=vb20s Else currentfont=vb20 ; font
 			text3d currentfont,-StringWidth3d(currentfont,itype\name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/2,itype\name
+			If selected=1 Then text3d currentfont,-StringWidth3d(currentfont,condition_name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/1.5,condition_name
 		End If
 	Forever
 	If amount_ofitems>0 Then
