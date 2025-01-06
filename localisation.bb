@@ -21,15 +21,15 @@ Global LOC_MONTH_NOVEMBER$="November"
 Global LOC_MONTH_DECEMBER$="Dovember"
 
 Dim LOC_CONDITIONS$(9)
-LOC_CONDITIONS$(9)="Factory New"
-LOC_CONDITIONS$(8)="Almost New"
-LOC_CONDITIONS$(7)="Minimal Wear"
-LOC_CONDITIONS$(6)="Used"
-LOC_CONDITIONS$(5)="Well Worn"
-LOC_CONDITIONS$(4)="Battle Scarred"
-LOC_CONDITIONS$(3)="Filthy"
-LOC_CONDITIONS$(2)="Almost Broken"
-LOC_CONDITIONS$(1)="Destroyed"
-LOC_CONDITIONS$(0)="Useless"
+LOC_CONDITIONS$(9)="Factory New" ; 100%
+LOC_CONDITIONS$(8)="Great" ; 90%
+LOC_CONDITIONS$(7)="Solid" ; 80%
+LOC_CONDITIONS$(6)="Used" ; 70%
+LOC_CONDITIONS$(5)="Well Worn" ; 60%
+LOC_CONDITIONS$(4)="Damaged" ; 50%
+LOC_CONDITIONS$(3)="Greatly Damaged" ; 40$
+LOC_CONDITIONS$(2)="Roughly Used " ; 30$
+LOC_CONDITIONS$(1)="Beaten Up" ; 20$
+LOC_CONDITIONS$(0)="Destroyed" ; 10%
 ;~IDEal Editor Parameters:
 ;~C#Blitz3D
