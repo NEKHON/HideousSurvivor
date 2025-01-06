@@ -232,10 +232,6 @@ For k = 1 To tweeningTicks
 			If signal_strafe<>0 Or signal_walk<>0 Then MoveEntity player_camera,Sin(MilliSecs()/3)*0.05,Abs(Sin(MilliSecs()/3)*0.05),0 ; cameraboob
 			success=1
 			
-			; --
-			itemtip=""
-			rhitname=client_stronghand
-			lhitname=client_weak
 			wield_interaction()
 			
 			If localmode=1 Then ; PLAYER CONTROLS
@@ -309,6 +305,8 @@ Flip(render_vsync)
 ; ---------------------------------------------
 Goto MainLoop ; ------------------------
 RuntimeError("End of MainLoop.")
+ 
+;~C#Blitz3D
  
 ;~C#Blitz3D
 ;~IDEal Editor Parameters:

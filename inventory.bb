@@ -27,6 +27,7 @@ Global sfx_inventory_priority = LoadSound("sounds/interactions/inventory_rearang
 
 ; TODO: it should be inventory_collumn, instead of row, and inventory_row should be inventory_collumn, but im lazy.
 Function inventory_interface(sorting$="")
+	.update_inventory
 	cam_pitch = cam_pitch + 0.25 ; move camera down
 	Local amount_ofitems=0
 	Local amount_ofdisplitems=0
@@ -55,9 +56,26 @@ Function inventory_interface(sorting$="")
 		If inventory_collumn=0 Then wearinventory_row = inventory_row
 		If amount_ofclothes=(wearinventory_row+1) And inventory_collumn=0 Then selected=1 Else scale#=Abs(inventory_ui_item_scale*ui_scaling) selected=0 
 		If selected_cloth = amount_ofclothes Then scale#=Abs(inventory_ui_selecteditem_scale+(Sin(MilliSecs()*0.25)*0.05)*ui_scaling) 
-		If selected=1 Then
+		If selected=1 Then 
 			selected_cloth=amount_ofclothes
-			If MouseHit(1)
+			If MouseHit(2) And (client_weakhand="" Or client_stronghand="") ; take off cloth
+				old_off2=1
+				s$=item
+				Repeat ; find  items that belong to this pocket, put them in cloth local inv
+					off12 = Instr(client_inventory,"<",old_off2)
+					If off12=0 Then Exit Else old_off2=off12
+					off22 = Instr(client_inventory,">",off12)
+					item2$ = Mid(client_inventory,off12+1,off22-off12-1)
+					belongsto% = Mid(item2,Instr(item2,"]",1)+1,1)
+					If belongsto = selected_cloth Then s$=Left(s,Len(s)-1) + Left(item2,Len(item2)-1)+ "$1%]" client_inventory=Left(client_inventory,off12-1)+Right(client_inventory,Len(client_inventory)-off22) Else old_off2=old_off2+1
+				Forever
+				client_wear = Left(client_wear,off1-1)+Right(client_wear,Len(client_wear)-off2)
+				If Len(client_stronghand)=0 Then client_stronghand=s Else client_weakhand=s
+				clog("I taked off "+itype\name+".")
+				Goto update_inventory
+			End If	
+			; -----------
+			If MouseHit(1) ; put in pockets
 				If Len(client_stronghand)>0 Then
 					client_inventory = client_inventory + "<"+client_stronghand+amount_ofclothes+">"
 					client_stronghand=""
@@ -72,14 +90,7 @@ Function inventory_interface(sorting$="")
 	Forever
 	old_off1=0
 	; ----- DISPALY POCKET
-	Repeat ; separate items from current pocket from other items
-		off1 = Instr(client_inventory,"<",old_off1+1)
-		If off1=0 Then Exit Else old_off1=off1
-		off2 = Instr(client_inventory,">",off1)
-		item$ = Mid(client_inventory,off1+1,off2-off1-1)
-		belongsto% = Mid(item,Instr(item,"]",1)+1,1)
-		If belongsto = selected_cloth Then pocket_items$ = pocket_items$ + "<"+item+">"
-	Forever
+	pocket_items$ = get_clothinventory$(client_inventory,selected_cloth)
 	old_off1=0
 	Repeat ; display items in pocket
 		If Len(pocket_items)=0 Then Exit ; no items in pocket, skip
@@ -143,22 +154,79 @@ End Function
 
 Function wield_interaction()
 	itemtip=""
-	If Len(client_stronghand)>0 Then itemtip="[O] To wear" If signal_wear Then client_wear = client_wear + "<" + client_stronghand + ">" client_stronghand="" 
+	rhitname=""
+	lhitname=""
+	If Len(client_stronghand)>0 Then 
+		id% = Mid(client_stronghand,1,Instr(client_stronghand,"/",1)-1)
+		itype.item_type = Object.item_type(id)
+		rhitname=itype\name
+		; ----
+		If itype\name = "Military Jacket" ; DEBUG HARD CODE, FIX ASAP
+			itemtip = "[O] To wear "+itype\name
+			If signal_wear Then ; check if can wear cloth
+				If Len(client_weakhand)>0 Then clog("My both hands is full, cant take on that cloth") signal_wear=0
+			End If
+			If signal_wear Then ; wear cloth
+				If Instr(client_stronghand,"$1%",1)>0 Then ; something in local inventory, put that in pockets
+					old_off1=0
+					Repeat ; get amount of clothes
+						off1 = Instr(client_wear,"<",old_off1+1)
+						If off1=0 Then Exit Else old_off1=off1 amount_ofclothes=amount_ofclothes+1
+						off2 = Instr(client_wear,">",off1)
+					Forever
+					s$ = Mid (client_stronghand,Instr(client_stronghand,"[",1)+1,Instr(client_stronghand,"]",1)-Instr(client_stronghand,"[",1)-1) ; cloth inventory
+					old_off1=1
+					Repeat ; parse pocket local inv
+						off1 = Instr(s,"$1%",old_off1)
+						If old_off1=1 Then a=0 Else a=2
+						If off1=0 Then Exit
+						item$ = Mid(s,old_off1+a,off1+a-old_off1)
+						clog(item)
+						; not finished
+					Forever
+				Else
+					client_wear = client_wear + "<"+client_stronghand+">"
+					client_stronghand=""
+				End If
+				clog("I took on "+itype\name)
+				signal_wear=0
+			End If
+		End If
+	End If 
+	
+	If Len(client_weakhand)>0 Then 
+		id% = Mid(client_weakhand,1,Instr(client_weakhand,"/",1)-1)
+		itype.item_type = Object.item_type(id)
+		lhitname=itype\name
+	EndIf
 	
 	; ----- switch hands
 	If signal_switchhands<>0 Then
-		If Len(client_weakhand)>0 And Len(client_stronghand)>0 Then 
+		If Len(client_weakhand)>0 And Len(client_stronghand)>0 Then ; both hands full, swithc items
 			s$ = client_stronghand
 			client_stronghand = client_weakhand
 			client_weakhand = s
-		ElseIf Len(client_weakhand)>0 And Len(client_stronghand)=0
+		ElseIf Len(client_weakhand)>0 And Len(client_stronghand)=0 ; weakhand full, stronghand empty, put item in stronghand
 			client_stronghand = client_weakhand
 			client_weakhand=""
-		Else
+		Else ; stronghand full, weakhand empty, put item in weakhand
 			client_weakhand= client_stronghand
 			client_stronghand=""
 		End If
 	End If
+End Function
+
+Function get_clothinventory$(inv$,queue%)
+	old_off1=0
+	Repeat ; separate items from current pocket from other items
+		off1 = Instr(inv$,"<",old_off1+1)
+		If off1=0 Then Exit Else old_off1=off1
+		off2 = Instr(inv$,">",off1)
+		item$ = Mid(inv$,off1+1,off2-off1-1)
+		belongsto% = Mid(item,Instr(item,"]",1)+1,1)
+		If belongsto = queue Then s$ = s$ + "<"+item+">"
+	Forever
+	Return s$
 End Function
 
 Function update_droppeditems(dt#)

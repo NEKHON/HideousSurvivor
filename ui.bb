@@ -4,13 +4,13 @@ Function debug_info()
 	Text3D vb20,-center_x,center_y-40,"servvars: PosUpdMin: "+mp_positionupdatemin+", ServOclussion: (NYI)"+inttobool(mp_serverocclusion)
 	Text3D vb20,-center_x,center_y-55,"wtime: "+worldhours+":"+worldminutes+":"+worldseconds
 	Text3D vb20,-center_x,center_y-65,monthname+" "+worldday+", "+worldyear+" (leap year?: "+inttobool(worldleapyear)+"), temp: "+worldtemperature+"c"
-	Text3D vb20,-center_x,-center_y+60,lhitname,0,0,10
-	Text3D vb20,center_x-StringWidth3d(vb20,rhitname),-center_y+60,rhitname,0,0,-10
-	text3d vb20,center_x-stringwidth3d(vb20,itemtip),-center_y+50,itemtip
 	Text3D vb20,-center_x,-center_y+10,"mods: ["+modlist+"] >w<"
 End Function
 
 Function draw_ui()
+	Text3D vb20,-center_x,-center_y+60,lhitname,0,0,10
+	Text3D vb20,center_x-StringWidth3d(vb20,rhitname),-center_y+60,rhitname,0,0,-10
+	text3d vb20,center_x-stringwidth3d(vb20,itemtip),-center_y+50,itemtip
 	If Len(highlight)>0 Then Text3d vb20,-StringWidth3d(vb20,highlight)/2,0,highlight Else oval3D(img, 0, 0, 2, 2) ; Highlight or crosshair
 	If gfx_vignette=1 Then DrawImage3d(vignette,0,0,0,0,GraphicsWidth()/512+GraphicsHeight()/512-1) ; draw viggnete
 	draw_log() ; log
