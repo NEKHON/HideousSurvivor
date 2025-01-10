@@ -175,19 +175,19 @@ Function wield_interaction()
 						If off1=0 Then Exit Else old_off1=off1 amount_ofclothes=amount_ofclothes+1
 					Forever
 					s$ = Mid (client_stronghand,Instr(client_stronghand,"[",1)+1,Len(client_stronghand)-Instr(client_stronghand,"[",1)-1) ; cloth inventory
-					Repeat ; parse pocket local inv
+					Repeat ; parse pocket local inv, remove items from cloth local inv and add them to inventory
 						off1 = Instr(s,"$1%",1)
 						If off1=0 Then Exit
 						item$ = Mid(s,1,off1-1)
 						s$ = Right(s,Len(s)-(off1+2))
 						client_inventory = client_inventory + "<" + item + (amount_ofclothes+1) + ">"
 					Forever
+					; put on cloth
 					client_wear = client_wear + "<"+Mid(client_stronghand,1,Instr(client_stronghand,"[",1))+"]>"
-					client_stronghand=""
-				Else
+				Else ; nothing in pockets, just put on cloth
 					client_wear = client_wear + "<"+client_stronghand+">"
-					client_stronghand=""
 				End If
+				client_stronghand=""
 				clog("I took on "+itype\name)
 				signal_wear=0
 			End If
@@ -199,6 +199,20 @@ Function wield_interaction()
 		itype.item_type = Object.item_type(id)
 		lhitname=itype\name
 	EndIf
+	
+	; ------------------------------------------------------
+	; drop item
+	If signal_drop<>0 Then
+		If Len(client_stronghand)<>0
+			create_droppeditem(EntityX(player_camera,1),1.5,EntityZ(player_camera,1),client_stronghand)
+			client_stronghand = ""
+			rhitname=""
+		ElseIf Len(client_weakhand)<>0
+			create_droppeditem(EntityX(player_camera,1),1.5,EntityZ(player_camera,1),client_weakhand)
+			client_weakhand = ""
+			lhitname=""
+		End If
+	End If
 	
 	; ----- switch hands
 	If signal_switchhands<>0 Then
