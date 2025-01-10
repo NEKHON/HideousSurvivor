@@ -75,7 +75,7 @@ Function inventory_interface(sorting$="")
 				Goto update_inventory
 			End If	
 			; -----------
-			If MouseHit(1) ; put in pockets
+			If MouseHit(1) ; put in item pockets
 				If Len(client_stronghand)>0 Then
 					client_inventory = client_inventory + "<"+client_stronghand+amount_ofclothes+">"
 					client_stronghand=""
@@ -169,21 +169,21 @@ Function wield_interaction()
 			If signal_wear Then ; wear cloth
 				If Instr(client_stronghand,"$1%",1)>0 Then ; something in local inventory, put that in pockets
 					old_off1=0
+					amount_ofclothes=0
 					Repeat ; get amount of clothes
 						off1 = Instr(client_wear,"<",old_off1+1)
 						If off1=0 Then Exit Else old_off1=off1 amount_ofclothes=amount_ofclothes+1
-						off2 = Instr(client_wear,">",off1)
 					Forever
-					s$ = Mid (client_stronghand,Instr(client_stronghand,"[",1)+1,Instr(client_stronghand,"]",1)-Instr(client_stronghand,"[",1)-1) ; cloth inventory
-					old_off1=1
+					s$ = Mid (client_stronghand,Instr(client_stronghand,"[",1)+1,Len(client_stronghand)-Instr(client_stronghand,"[",1)-1) ; cloth inventory
 					Repeat ; parse pocket local inv
-						off1 = Instr(s,"$1%",old_off1)
-						If old_off1=1 Then a=0 Else a=2
+						off1 = Instr(s,"$1%",1)
 						If off1=0 Then Exit
-						item$ = Mid(s,old_off1+a,off1+a-old_off1)
-						clog(item)
-						; not finished
+						item$ = Mid(s,1,off1-1)
+						s$ = Right(s,Len(s)-(off1+2))
+						client_inventory = client_inventory + "<" + item + (amount_ofclothes+1) + ">"
 					Forever
+					client_wear = client_wear + "<"+Mid(client_stronghand,1,Instr(client_stronghand,"[",1))+"]>"
+					client_stronghand=""
 				Else
 					client_wear = client_wear + "<"+client_stronghand+">"
 					client_stronghand=""
