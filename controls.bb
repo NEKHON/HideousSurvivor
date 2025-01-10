@@ -6,6 +6,7 @@ Global control_interact = 18
 Global control_inventory = 15
 Global control_switchhands% = 33
 Global control_wear% = 24
+Global control_drop% = 16
 
 Global mxspeed#
 Global myspeed#
@@ -19,7 +20,8 @@ Global signal_strafe%
 Global signal_fire%
 Global signal_aim%
 Global signal_interact%
-Global signal_wear
+Global signal_wear%
+Global signal_drop%
 Global signal_switchhands
 Global inventory_open=-1
 Global inventory_collumn
@@ -49,10 +51,16 @@ Function control_signals()
 	End If
 	old_scroll = inventory_row+1
 	signal_interact = KeyHit(control_interact)
-	
+	signal_drop = KeyHit(control_drop)
 	
 	;signal_fire = MouseHit(control_fire)
 	signal_aim = MouseHit(control_aim)
+	
+	; --------
+	If KeyHit(66) Then gfx_vignette=-gfx_vignette ; enable/disable viggnete
+	; DEBUG FUNCS
+	If KeyHit(27) Then clog(client_inventory) ; display inventory
+	If KeyHit(2) Then state_mouselock=-state_mouselock:If state_mouselock=0 Then state_mouselock=-1
 End Function
 
 

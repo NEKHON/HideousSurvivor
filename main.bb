@@ -204,6 +204,7 @@ For k = 1 To tweeningTicks
 	If k = tweeningTicks Then CaptureWorld
 	; ---------------- logics here
 		; control
+	control_signals()
 	If state_mouselock>0 Then
 		mxspeed#=0
 		myspeed#=0
@@ -212,7 +213,6 @@ For k = 1 To tweeningTicks
 		cam_pitch = cam_pitch - myspeed#
 		If cam_pitch>80 Then cam_pitch=80
 		If cam_pitch<-80 Then cam_pitch=-80
-		control_signals()
 		MoveMouse center_x,center_y
 		HidePointer
 	End If 
@@ -305,6 +305,8 @@ Flip(render_vsync)
 ; ---------------------------------------------
 Goto MainLoop ; ------------------------
 RuntimeError("End of MainLoop.")
+ 
+;~C#Blitz3D
  
 ;~C#Blitz3D
  
