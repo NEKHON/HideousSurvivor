@@ -7,6 +7,7 @@ Global rhitname$="???"
 Global lhitname$="???"
 Global itemtip$
 
+Global network_client_pendingitempickup%
 Global client_inventory$
 Global client_wear$
 Global client_stronghand$
@@ -113,8 +114,28 @@ Function inventory_interface(sorting$="")
 			amount_ofdisplitems=amount_ofdisplitems+1
 			DrawImage3d(debug_item,0,0+((inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems)-((inventory_iconsize+(10*ui_scaling))*3), 0,0,scale,0)
 			If selected=1 Then currentfont=vb20s Else currentfont=vb20 ; font
+			If selected=1 Then 
+				; INTERACTIONS
+				If MouseHit(1) Then ; wield item
+					If Len(client_stronghand)=0 Then ; right hand is empty, put item in it
+						client_stronghand=Left(item,Len(item)-1)
+						off12 = Instr(client_inventory,item,1)
+						client_inventory = Left(client_inventory,off12-1)+Right(client_inventory,Len(client_inventory)-Instr(client_inventory,">",off12)+1)
+						Goto update_inventory
+					Else If Len(client_weakhand)=0 Then ; left hand is empty, put item in it
+						client_weakhand=Left(item,Len(item)-1)
+						off12 = Instr(client_inventory,item,1)
+						client_inventory = Left(client_inventory,off12-1)+Right(client_inventory,Len(client_inventory)-Instr(client_inventory,">",off12)+1)
+						Goto update_inventory
+					Else
+						clog("My hands is full.")
+					End If
+				End If 
+				; -----
+				; display item condition
+				text3d currentfont,-StringWidth3d(currentfont,condition_name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/1.5,condition_name
+			End If
 			text3d currentfont,-StringWidth3d(currentfont,itype\name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/2,itype\name
-			If selected=1 Then text3d currentfont,-StringWidth3d(currentfont,condition_name)/2,0+(inventory_iconsize+(25*ui_scaling))*amount_ofdisplitems-((inventory_iconsize+(10*ui_scaling))*3)-inventory_iconsize/1.5,condition_name
 		End If
 	Forever
 	If amount_ofitems>0 Then
