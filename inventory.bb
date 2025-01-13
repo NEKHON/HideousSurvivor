@@ -119,13 +119,13 @@ Function inventory_interface(sorting$="")
 				If MouseHit(1) Then ; wield item
 					If Len(client_stronghand)=0 Then ; right hand is empty, put item in it
 						client_stronghand=Left(item,Len(item)-1)
-						off12 = Instr(client_inventory,item,1)
-						client_inventory = Left(client_inventory,off12-1)+Right(client_inventory,Len(client_inventory)-Instr(client_inventory,">",off12)+1)
+						off12 = Instr(client_inventory,"<"+item,1)
+						client_inventory = Left(client_inventory,off12-1)+Right(client_inventory,Len(client_inventory)-Instr(client_inventory,">",off12))
 						Goto update_inventory
 					Else If Len(client_weakhand)=0 Then ; left hand is empty, put item in it
 						client_weakhand=Left(item,Len(item)-1)
-						off12 = Instr(client_inventory,item,1)
-						client_inventory = Left(client_inventory,off12-1)+Right(client_inventory,Len(client_inventory)-Instr(client_inventory,">",off12)+1)
+						off12 = Instr(client_inventory,"<"+item,1)
+						client_inventory = Left(client_inventory,off12)+Right(client_inventory,Len(client_inventory)-Instr(client_inventory,">",off12))
 						Goto update_inventory
 					Else
 						clog("My hands is full.")
@@ -283,8 +283,8 @@ Function create_droppeditem(x#=0,y#=2,z#=0,idata$="",handler$="dummy",flags$="",
 	;
 	If condition=-1 Then condition=Rand(2,98)
 	If Len(idata)=0 Then di\idata = handler+"("+flags+")"+condition+"/"+stack+"["+localinv+"]" Else di\idata=idata
+	If Len(idata)=0 Then di\idata=handler+"("+flags+")"+condition+"/"+stack+"["+localinv+"]" Else di\idata=idata
 	
-	map_items$=map_items$ + "<"+di\idata+">"
 	If localmode = 2 ; if host, send evewyone info about item
 		net_sendmessage(140,x+";"+y+";"+z+"|"+di\idata,1)
 	End If 
