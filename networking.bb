@@ -18,8 +18,6 @@ Global my_ping
 Global host_beforenextpositionsend
 Global client_beforenextpositionsend
 
-Global anticheat_log_file = WriteFile("Logs/anticheat_log_"+CurrentDate()+","+MilliSecs())
-
 Type local_client ; client on clients
 	Field ID%
 	Field name$
@@ -287,13 +285,6 @@ Function network_funcs()
 	Wend
 End Function
 
-Function anticheat_log(id%,info$)
-	For nc.net_client = Each net_client
-		If nc\id = id Then name$ = nc\name Exit
-	Next
-	s$ = "ANTICHEAT: "+CurrentTime() +", TRIGGERED BY "+name$+"("+id+"), CASE: "+info
-	WriteLine(anticheat_log_file,s)
-End Function
 
 Function idtoname$(id%)
 	Select LocalMode
