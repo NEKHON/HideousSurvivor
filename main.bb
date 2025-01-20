@@ -288,25 +288,21 @@ For k = 1 To tweeningTicks
 	timer() ; update world time
 Next ; ---------
 
-; -------------- RENDER ; -------------------------------
-If (api_getfocus()<>0 Or render_whenunfocused=1) Then; skip render if game is not focused
-	RenderWorld tweeningRate
-	Clear3D()
 ; ---- inventory
-	If inventory_open=1 Then inventory_interface()
+If inventory_open=1 Then inventory_interface()
 If debug_mode=1 Then : debug_info() : Else:Text3D vb20,-center_x,center_y-10,"FPS: "+ info_fps:End If
-	draw_ui()
-	draw_charnames()
-	draw_playerslist()
-Else
-	Text GraphicsWidth()/2,GraphicsHeight()/2,"Window Unfocused"
+draw_ui()
+draw_charnames()
+draw_playerslist()
+; -------------- RENDER ; -------------------------------
+If (api_getfocus()<>0 Or render_whenunfocused=1) And info_fps>=gameLogicFPS Then; skip render if game is not focused
+	RenderWorld tweeningRate
+	Flip(render_vsync)
 End If
-Flip(render_vsync)
+Clear3D()
 ; ---------------------------------------------
 Goto MainLoop ; ------------------------
 RuntimeError("End of MainLoop.")
- 
-;~C#Blitz3D
  
 ;~C#Blitz3D
  
