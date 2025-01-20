@@ -214,7 +214,7 @@ Function network_funcs()
 					Next
 				End If
 			Case 140 ; recieved create dropped item signal
-				If LocalMode=1 And net_msgfrom=1 Then ; only host can send create dropped item signal, and only client should accept it
+				If (LocalMode=1 And net_msgfrom=1) And Net_MsgFromIP=net_serverIP Then ; only host can send create dropped item signal, and only client should accept it
 					s$ = Right(net_msgstring,Len(net_msgstring)-Instr(net_msgstring,"|",1)) ; item data
 					d$ = Left(net_msgstring,Instr(net_msgstring,"|",1)) ; position 
 					of1 = Instr(d,";",1)
@@ -292,23 +292,41 @@ Function network_funcs()
 				Next
 				If success=0 Then RuntimeError("host remove physitem fail "+net_msgstring)
 			Case 143 ; host adds item
-				item$ = Right(net_msgstring,Len(net_msgstring)-1)
-				addto$ = Left(net_msgstring,1)
-				Select addto
-					Case "w"
-						client_weakhand = item
-					Case "s"
-						client_stronghand = item
-					Default
-						clog("Unknow item add destination "+addto)
-				End select
-			Case 144 ; client does something in inv
-				;Select net_msgstring
-					;Case 0 ; wield
-				
-					;Case 
-				;End Select
-				
+				If net_msgfrom = 1 Then
+					item$ = Right(net_msgstring,Len(net_msgstring)-1)
+					addto$ = Left(net_msgstring,1)
+					Select addto
+						Case "w" ; add item to weakhand
+							client_weakhand = item
+						Case "s" ; add item to stronghand
+							client_stronghand = item
+						Default
+							clog("Unknow item add destination "+addto)
+					End Select
+				End If
+			Case 145 ; client want to do something in inv
+				For char.character = Each character
+					If char\master_player = net_msgfrom
+						Select net_msgstring
+							Case "d" ; DROP  --------------------
+								cam_height% = EntityY(char\mesh)+(char\height / 100)-0.1
+								If Len(char\stronghand)>0 Then
+									create_droppeditem(EntityX(char\mesh),cam_height,EntityZ(char\mesh),char\stronghand)
+									char\stronghand=""
+									Return
+								ElseIf Len(char\weakhand)>0 Then
+									create_droppeditem(EntityX(char\mesh),cam_height,EntityZ(char\mesh),char\weakhand)
+									char\weakhand=""
+									Return
+								Else
+									clog("Player "+net_msgfrom+" Tried to drop item but his hands is empty")
+									Return
+								End If
+							; -------------------------------------------------------------------------
+						End Select
+					End If
+				Next
+				clog("Player "+net_msgfrom+" Tried to interact with inventory, but his mastered character failed to find")
 			Case 190 ; Got an error mesage from host
 				Select net_msgstring
 					Case 1 

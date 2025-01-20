@@ -225,11 +225,19 @@ Function wield_interaction()
 	; drop item
 	If signal_drop<>0 Then
 		If Len(client_stronghand)<>0
-			create_droppeditem(EntityX(player_camera,1),1.5,EntityZ(player_camera,1),client_stronghand)
+			If localmode=2 Then  
+				create_droppeditem(EntityX(player_camera,1),1.5,EntityZ(player_camera,1),client_stronghand) 
+			Else 
+				net_sendmessage(145,"d",localid,1)
+			End If
 			client_stronghand = ""
 			rhitname=""
 		ElseIf Len(client_weakhand)<>0
-			create_droppeditem(EntityX(player_camera,1),1.5,EntityZ(player_camera,1),client_weakhand)
+			If localmode=2 Then  
+				create_droppeditem(EntityX(player_camera,1),1.5,EntityZ(player_camera,1),client_weakhand) 
+			Else 
+				net_sendmessage(145,"d",localid,1)
+			End If
 			client_weakhand = ""
 			lhitname=""
 		End If
@@ -324,8 +332,7 @@ Function droppeditem_pickup(handler)
 		net_sendmessage(141,handler)
 	Else  ; host
 		If client_stronghand="" Then client_stronghand=di\idata ElseIf client_weakhand="" Then client_weakhand=di\idata
-		FreeEntity di\entity
-		Delete di
+		net_sendmessage(142,Right(EntityName(di\entity),Len(EntityName(di\entity))-1))
 	End If
 End Function
 ;~IDEal Editor Parameters:
