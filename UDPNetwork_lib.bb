@@ -16,7 +16,7 @@ Global net_autoSwitchHost = True
 
 ; Also you can set a default port (thanks to Rick Nasher for the idea) :
 ; (NOTE : if you want to be server, you'll have to make a port forwarding in your router/NAT for this port, or the server port you enter in the console)
-Global net_defaultPort = 32512
+Global net_defaultPort = 6787
 
 ; From here I can't say better than Stayne on BB forums :
 ; "Going down the confusing rabbit hole of trying to decipher someone else's network code is a dark one. Gooooooooooood luck." :)
@@ -43,6 +43,7 @@ Global net_stream
 Global net_backupStream
 Global net_port
 Global net_serverIP
+Global net_tempip$
 Global net_serverPort
 Global net_ID
 Global net_countID
@@ -73,26 +74,17 @@ Function Net_StartInput()
 	WaitKey()
 	If KeyDown(36) Then net_mode=1 Else net_mode=2
 	
-	
+	Cls:Locate 0,0
 	If net_mode = 1
 		Cls:Locate 0,0
-		ip$ = Input("Server IP (x.x.x.x) ? ")
-		If ip <> ""
-			ip =  Net_DotToInt(ip)
-			net_serverPort = Input("Server port (0-65535) ? ")
-			net_port = Input("Local port (0-65535) ? ")
-		Else
-			ip = "127.0.0.1"
-			net_serverPort = net_defaultPort
-			net_port = Rand(1024,65535)
-		EndIf
-		Cls:Locate 0,0
-		Return Net_JoinServer(ip,net_serverPort)
+		net_tempip = Input("Server IP (x.x.x.x) ? ")
+		If net_tempip="" Then net_tempip = "127.0.0.1"
+		net_serverPort = net_defaultPort
+		net_port = Rand(1024,65535)
+		Return Net_JoinServer(net_tempip ,net_serverPort)
 	ElseIf net_mode = 2
 		Cls:Locate 0,0
-		net_port = Input("Local port (0-65535) ? ")
-		If net_port = 0 Then net_port = net_defaultPort
-		Cls:Locate 0,0
+		net_port = net_defaultPort
 		Return Net_HostServer(net_port)
 	Else
 		Goto net_reset
@@ -118,7 +110,7 @@ End Function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Function Net_JoinServer(ip$,port)
 	
-	net_serverIP = ip
+	net_serverIP = Net_DotToInt(ip)
 	net_serverPort = port
 	
 	net_stream = CreateUDPStream(net_port)
@@ -742,11 +734,22 @@ End Function
 Function Net_DotToInt%(ip$)
 	
 ; thanks to Chroma on b3d forums for the code !
-	
-	off1=Instr(ip$,"."):If off1=0 Then Goto wrong_ip_format: ip1=Left$(ip$,off1-1)
-	off2=Instr(ip$,".",off1+1):If off1=0 Then Goto wrong_ip_format:ip2=Mid$(ip$,off1+1,off2-off1-1)
-	off3=Instr(ip$,".",off2+1):If off1=0 Then Goto wrong_ip_format:ip3=Mid$(ip$,off2+1,off3-off2-1)
-	off4=Instr(ip$," ",off3+1):If off1=0 Then Goto wrong_ip_format:ip4=Mid$(ip$,off3+1,off4-off3-1)
+	; - octet 1
+	off1=Instr(ip$,".")
+	If off1=0 Then Goto wrong_ip_format
+	ip1=Left$(ip$,off1-1)
+	; - octet 2
+	off2=Instr(ip$,".",off1+1)
+	If off2=0 Then Goto wrong_ip_format
+	ip2=Mid$(ip$,off1+1,off2-off1-1)
+	; - octet 3
+	off3=Instr(ip$,".",off2+1)
+	If off3=0 Then Goto wrong_ip_format
+	ip3=Mid$(ip$,off2+1,off3-off2-1)
+	; - octet 4
+	off4=Instr(ip$," ",off3+1)
+	ip4=Mid$(ip$,off3+1,off4-off3-1)
+	; ----------
 	Return ip1 Shl 24 + ip2 Shl 16 + ip3 Shl 8 + ip4
 	.wrong_ip_format
 	RuntimeError("IP Is not in x.x.x.x format") 

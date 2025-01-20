@@ -52,7 +52,7 @@ Else
 			
 	Else ; error
 		Net_StopNetwork()
-		RuntimeError("Failed to start game.")
+		RuntimeError("Failed to start game. Info: IP: "+net_serverIP+" ("+net_tempip+")"+", Port: "+ net_ServerPort+", net_version:"+net_version$)
 	EndIf
 End If
 
