@@ -142,5 +142,11 @@ End Function
 
 Function IntMax():Return 2147483647:End Function ; biggest possible int
 Function FloatMax$():Return "2.14748e+009":End Function  ; biggest possible float
+
+Function ShortFloat#(num#, amountofdigits%=1) ; fuck i have no idea how to speak english but this funcs decrease amount of digits after period in float
+	s$ = Str(num)
+	s$ = Left(s,Clamp(Instr(s,".",1)+amountofdigits,0,Len(s)))
+	Return Float(s)
+End Function
 ;~IDEal Editor Parameters:
 ;~C#Blitz3D
