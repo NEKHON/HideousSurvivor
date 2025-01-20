@@ -78,6 +78,7 @@ Function Net_StartInput()
 		Cls:Locate 0,0
 		ip$ = Input("Server IP (x.x.x.x) ? ")
 		If ip <> ""
+			ip =  Net_DotToInt(ip)
 			net_serverPort = Input("Server port (0-65535) ? ")
 			net_port = Input("Local port (0-65535) ? ")
 		Else
@@ -117,7 +118,7 @@ End Function
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Function Net_JoinServer(ip$,port)
 	
-	net_serverIP = Net_DotToInt(ip)
+	net_serverIP = ip
 	net_serverPort = port
 	
 	net_stream = CreateUDPStream(net_port)
@@ -742,12 +743,13 @@ Function Net_DotToInt%(ip$)
 	
 ; thanks to Chroma on b3d forums for the code !
 	
-	off1=Instr(ip$,".") :ip1=Left$(ip$,off1-1)
-	off2=Instr(ip$,".",off1+1):ip2=Mid$(ip$,off1+1,off2-off1-1)
-	off3=Instr(ip$,".",off2+1):ip3=Mid$(ip$,off2+1,off3-off2-1)
-	off4=Instr(ip$," ",off3+1):ip4=Mid$(ip$,off3+1,off4-off3-1)
+	off1=Instr(ip$,"."):If off1=0 Then Goto wrong_ip_format: ip1=Left$(ip$,off1-1)
+	off2=Instr(ip$,".",off1+1):If off1=0 Then Goto wrong_ip_format:ip2=Mid$(ip$,off1+1,off2-off1-1)
+	off3=Instr(ip$,".",off2+1):If off1=0 Then Goto wrong_ip_format:ip3=Mid$(ip$,off2+1,off3-off2-1)
+	off4=Instr(ip$," ",off3+1):If off1=0 Then Goto wrong_ip_format:ip4=Mid$(ip$,off3+1,off4-off3-1)
 	Return ip1 Shl 24 + ip2 Shl 16 + ip3 Shl 8 + ip4
-	
+	.wrong_ip_format
+	RuntimeError("IP Is not in x.x.x.x format") 
 End Function
 ;~IDEal Editor Parameters:
 ;~C#Blitz3D
