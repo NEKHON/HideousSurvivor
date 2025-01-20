@@ -279,7 +279,7 @@ For k = 1 To tweeningTicks
 			Case "I" ; ITEM ----------------------------
 				handler% = Mid(s,2,Len(s)-1)
 				di.dropped_item = Object.dropped_item(handler)
-				highlight=di\idata
+				highlight="Grab?"
 				If signal_interact Then
 					droppeditem_pickup(Handler)
 				End If

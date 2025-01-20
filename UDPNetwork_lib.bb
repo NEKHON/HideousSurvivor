@@ -58,6 +58,7 @@ Global Net_MsgType
 Global Net_MsgFrom
 Global Net_MsgTo
 Global Net_MsgString$
+Global Net_MsgFromIP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 Function Net_StartInput()
@@ -343,6 +344,7 @@ Function Net_CheckMessage()
 				Net_MsgFrom = ReadShort(net_stream)
 				Net_MsgTo = ReadShort(net_stream)
 				Net_MsgString = ReadString(net_stream)
+				Net_MsgFromIP = UDPMsgIP(net_stream)
 				
 				If ReadAvail(net_stream) ; binary data
 					net_dataOffset = ReadAvail(net_stream)

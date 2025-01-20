@@ -105,6 +105,10 @@ Function network_funcs()
 					Next
 				End If
 			Case 101 ; a player has quit
+				For nc.net_client = Each net_client
+					If Net_MsgFromIP <> nc\ip Then CLOG("EXIT SIGNAL SENT FROM ANOTHER PLAYER WTF")
+				Next
+				If net_msgfrom = localID Then Return	
 				For char.character = Each character ; remove info about player from character
 					If char\master_player = Net_msgfrom Then char\master_player = 0 Exit
 				Next
@@ -161,7 +165,9 @@ Function network_funcs()
 					If success=0 Then RuntimeError("Networking error, Signal 166 (Give client a character). Couldnt found character with ID "+Left(net_msgstring,Instr(net_msgstring,"/",1)-1)+ " For player "+Right(net_msgstring,Len(net_msgstring)-Instr(net_msgstring,"/",1)))
 				End If
 			Case 119 ; KICKED BY HOST
-				If net_msgfrom=1 And localID>1 Then RuntimeError("Kicked from server, Reason: "+net_msgstring)
+				If (net_msgfrom=1 And localID>1) And Net_MsgFromIP=net_serverIP Then 
+					RuntimeError("Kicked from server, Reason: "+net_msgstring)
+				End If
 			; -----
 			Case 130 ; HOST recieved player position update
 				For nc.net_client = Each net_client
@@ -213,39 +219,71 @@ Function network_funcs()
 					d$ = Left(net_msgstring,Instr(net_msgstring,"|",1)) ; position 
 					of1 = Instr(d,";",1)
 					of2 = Instr(d,";",of1+1)
-					create_droppeditem(Left(d,of1-1),Mid(d,of1+1,of2-of1-1),Right(d,Len(d)-of2),s)
+					di.dropped_item = New dropped_item
+					di\entity = CreateCube()
+					x#=ShortFloat#(Left(d,of1-1), 3)
+					y#=ShortFloat#(Mid(d,of1+1,of2-of1-1), 3)
+					z#=ShortFloat#(Right(d,Len(d)-of2), 3)
+				; -----------
+					.check_items_overlap_again
+					For di2.dropped_item = Each dropped_item
+						If di2\entity<>di\entity Then
+							If EntityX(di2\entity)=x Or EntityZ(di2\entity)=z Then
+								If Rand(0,1) = 0 Then x=x-Rnd(0.001,0.05) Else x=x+Rnd(0.001,0.05)
+								If Rand(0,1) = 0 Then z=z-Rnd(0.001,0.05) Else z=z+Rnd(0.001,0.05)
+								Goto check_items_overlap_again
+							End If
+						End If
+					Next
+				; ----------------
+					PositionEntity di\entity,x,y,z,1
+					ScaleMesh di\entity,0.2,0.2,0.2
+					EntityPickMode di\entity,1
+					EntityRadius di\entity,0.2,0.2
+					a=Handle(di)
+					NameEntity di\entity,"I"+Int(Left(s,Instr(s,"\",1)))
+					di\idata=Right(s,Instr(s,"\",1)-1)
 				End If
 			Case 141 ; player wants to pickup smth
 				If LocalMode=2 Then
-					For nc.net_client = Each net_client
-						If nc\id = net_msgfrom Then
+					For char.character = Each character
+						If char\master_player = net_msgfrom Then
 							For di.dropped_item = Each dropped_item
-								If di\idata = net_msgstring Then 
-									For char.character = Each character
-										If char\master_player = net_msgfrom Then
-											If Len(char\stronghand)=0 Then
-												net_sendmessage(143,"s"+di\idata,1,net_msgfrom) 
-												Exit
-											ElseIf Len(char\weakhand)=0 Then 
-												net_sendmessage(143,"w"+di\idata,1,net_msgfrom) 
-												Exit
-											End If
-											clog("Networking -> Signal 141, Failed to make player pick up item cuz both hands is buzy, desync or cheats.")
-											Exit
-										End If
-									Next
-									net_sendmessage(142,di\idata,1,0)
-									Exit
-								End If 
+								If Right(EntityName(di\entity),Len(EntityName(di\entity))-1)=net_msgstring Then
+									If EntityDistance(di\entity,char\mesh)>2 Then 
+										clog("Player "+net_msgfrom+" Tried to pickup item "+net_msgstring+" Which is too far away") 
+										net_sendmessage(190,1,1,net_msgfrom)
+										Return
+									End If
+									; todo, check if there is wall or character between char and item
+									; - item exists, and character is near enough
+									
+									; Check if there is free hand to pickup item
+									If char\stronghand="" Then
+										char\stronghand=di\idata
+										net_sendmessage(142,Right(EntityName(di\entity),Len(EntityName(di\entity))-1))
+										net_sendmessage(143,"s"+di\idata,1,net_msgfrom)
+									ElseIf char\weakhand="" Then
+										char\weakhand=di\idata
+										net_sendmessage(142,Right(EntityName(di\entity),Len(EntityName(di\entity))-1))
+										net_sendmessage(143,"w"+di\idata,1,net_msgfrom)
+									Else
+										clog("Player "+net_msgfrom+" Tried to pickup item "+net_msgstring+" But his hands is full.")
+										net_sendmessage(190,2,1,net_msgfrom)
+									End If
+									Return
+								End If
 							Next
-							Exit
+							clog("Player "+net_msgfrom+" Tried to pickup item "+net_msgstring+" Which is failed to find")
+							Return
 						End If
 					Next
+					clog("Player "+net_msgfrom+" Tried to pickup item "+net_msgstring+", But he dont have any mastered character that could pickup item.")
 				End If
 			Case 142 ; hosts removes item
 				success=0
 				For di.dropped_item = Each dropped_item
-					If di\idata = net_msgstring Then
+					If Right(EntityName(di\entity),Len(EntityName(di\entity))-1)  = net_msgstring Then
 						FreeEntity di\entity
 						Delete di
 						success=1
@@ -254,37 +292,33 @@ Function network_funcs()
 				Next
 				If success=0 Then RuntimeError("host remove physitem fail "+net_msgstring)
 			Case 143 ; host adds item
-				success=0
-				If LocalMode=1 Then
-					For char.character = Each character
-						If char\master_player = localID Then
-							item$ = Right(net_msgstring,Len(net_msgstring)-1)
-							addto$=Lower(Mid(net_msgstring,1,1))
-							Select addto
-								Case "w"
-									char\weakhand = item
-								Case "s"
-									char\stronghand = item
-							End Select
-							clog("host given me "+net_msgstring)
-							If Len(char\weakhand)>0 Or Len(char\stronghand)>0 Then success=1
-							rhitname$=char\stronghand
-							lhitname$=char\weakhand
-							Exit
-						End If
-					Next
-				End If
-				If success=0 Then RuntimeError("Fail to give "+net_msgstring+" to mastered character of "+localID)
+				item$ = Right(net_msgstring,Len(net_msgstring)-1)
+				addto$ = Left(net_msgstring,1)
+				Select addto
+					Case "w"
+						client_weakhand = item
+					Case "s"
+						client_stronghand = item
+					Default
+						clog("Unknow item add destination "+addto)
+				End select
 			Case 144 ; client does something in inv
 				;Select net_msgstring
 					;Case 0 ; wield
-						
+				
 					;Case 
 				;End Select
+				
+			Case 190 ; Got an error mesage from host
+				Select net_msgstring
+					Case 1 
+						clog("Failed to pickup item, Too far away")
+					Case 2
+						clog("My hands is full.")
+				End Select
 		End Select
 	Wend
 End Function
-
 
 Function idtoname$(id%)
 	Select LocalMode

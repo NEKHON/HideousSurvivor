@@ -2,12 +2,12 @@ Type dropped_item
 	Field entity%
 	Field idata$
 End Type
+
 Global dropitems_gravity# = -6
 Global rhitname$="???"
 Global lhitname$="???"
 Global itemtip$
 
-Global network_client_pendingitempickup%
 Global client_inventory$
 Global client_wear$
 Global client_stronghand$
@@ -182,7 +182,7 @@ Function wield_interaction()
 		itype.item_type = Object.item_type(id)
 		rhitname=itype\name
 		; ----
-		If itype\name = "Military Jacket" ; DEBUG HARD CODE, FIX ASAP
+		If itype\name = "Military Jacket" ; TEMPORARY HARD CODE, FIX ASAP
 			itemtip = "[O] To wear "+itype\name
 			If signal_wear Then ; check if can wear cloth
 				If Len(client_weakhand)>0 Then clog("My both hands is full, cant take on that cloth") signal_wear=0
@@ -275,18 +275,32 @@ End Function
 Function create_droppeditem(x#=0,y#=2,z#=0,idata$="",handler$="dummy",flags$="",condition%=-1,stack%=1,localinv$="")
 	di.dropped_item = New dropped_item
 	di\entity = CreateCube()
+	x#=ShortFloat#(x#, 3)
+	y#=ShortFloat#(y#, 3)
+	z#=ShortFloat#(z#, 3)
+	; -----------
+	.check_items_overlap_again
+	For di2.dropped_item = Each dropped_item
+		If di2\entity<>di\entity Then
+			If EntityX(di2\entity)=x Or EntityZ(di2\entity)=z Then
+				If Rand(0,1) = 0 Then x=x-Rnd(0.001,0.05) Else x=x+Rnd(0.001,0.05)
+				If Rand(0,1) = 0 Then z=z-Rnd(0.001,0.05) Else z=z+Rnd(0.001,0.05)
+				Goto check_items_overlap_again
+			End If
+		End If
+	Next
+	; ----------------
 	PositionEntity di\entity,x,y,z,1
 	ScaleMesh di\entity,0.2,0.2,0.2
 	EntityPickMode di\entity,1
 	EntityRadius di\entity,0.2,0.2
-	NameEntity di\entity,"I"+Handle(di)
-	;
-	If condition=-1 Then condition=Rand(2,98)
-	If Len(idata)=0 Then di\idata = handler+"("+flags+")"+condition+"/"+stack+"["+localinv+"]" Else di\idata=idata
+	a=Handle(di)
+	NameEntity di\entity,"I"+a
+	If condition=-1 Then condition=Rand(2,98) ; temporary debug code, remove later ofc
 	If Len(idata)=0 Then di\idata=handler+"("+flags+")"+condition+"/"+stack+"["+localinv+"]" Else di\idata=idata
 	
-	If localmode = 2 ; if host, send evewyone info about item
-		net_sendmessage(140,x+";"+y+";"+z+"|"+di\idata,1)
+	If localmode = 2 ; if host, send everyone info about item
+		net_sendmessage(140,x+";"+y+";"+z+"|"+a+"\"+handler+"/"+condition+"/"+stack,1)
 	End If 
 End Function
 
@@ -306,33 +320,9 @@ End Function
 ; ------ DROPPED ITEMS
 Function droppeditem_pickup(handler)
 	di.dropped_item = Object.dropped_item(handler)
-	If localmode=1 Then
-;		For char.character = Each character
-;			If char\master_player = localid Then
-;				If Len(client_stronghand)=0 Or Len(client_weakhand)=0 Then
-;					net_sendmessage(141,di\idata,localid,1)
-;					Exit
-;				End If
-;			End If
-;		Next
-	Else
-;		For char.character = Each character
-;			If char\master_player = 1 Then 
-;				If client_stronghand="" Or client_weakhand="" Then
-;					If Len(client_stronghand)=0 Then
-;						client_stronghand = di\idata
-;					Else
-;						client_weakhand = di\idata
-;					End If
-;					net_sendmessage(142,di\idata,1,0)
-;					rhitname$=client_stronghand
-;					lhitname$=client_weakhand
-;					Exit
-;				Else
-;					clog("My hands is full")
-;				End If
-;			End If
-;		Next
+	If localmode=1 Then ; client
+		net_sendmessage(141,handler)
+	Else  ; host
 		If client_stronghand="" Then client_stronghand=di\idata ElseIf client_weakhand="" Then client_weakhand=di\idata
 		FreeEntity di\entity
 		Delete di
