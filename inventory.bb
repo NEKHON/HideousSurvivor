@@ -249,6 +249,7 @@ Function wield_interaction()
 		old_stronghand$ = client_stronghand
 		client_stronghand = old_weakhand
 		client_weakhand= old_stronghand
+		If localmode=1 Then net_sendmessage(145,"s",localid,1)
 	End If
 End Function
 

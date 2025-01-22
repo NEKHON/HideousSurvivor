@@ -322,7 +322,13 @@ Function network_funcs()
 									clog("Player "+net_msgfrom+" Tried to drop item but his hands is empty")
 									Return
 								End If
-							; -------------------------------------------------------------------------
+						; -------------------------------------------------------------------------
+							Case "s" ; SWITCH
+								old_weakhand$ = char\weakhand
+								old_stronghand$ = char\stronghand
+								char\stronghand = old_weakhand
+								char\weakhand = old_stronghand
+						; -------------------------------------------------------------------------
 						End Select
 					End If
 				Next
