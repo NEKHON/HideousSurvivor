@@ -245,17 +245,10 @@ Function wield_interaction()
 	
 	; ----- switch hands
 	If signal_switchhands<>0 Then
-		If Len(client_weakhand)>0 And Len(client_stronghand)>0 Then ; both hands full, swithc items
-			s$ = client_stronghand
-			client_stronghand = client_weakhand
-			client_weakhand = s
-		ElseIf Len(client_weakhand)>0 And Len(client_stronghand)=0 ; weakhand full, stronghand empty, put item in stronghand
-			client_stronghand = client_weakhand
-			client_weakhand=""
-		Else ; stronghand full, weakhand empty, put item in weakhand
-			client_weakhand= client_stronghand
-			client_stronghand=""
-		End If
+		old_weakhand$ = client_weakhand
+		old_stronghand$ = client_stronghand
+		client_stronghand = old_weakhand
+		client_weakhand= old_stronghand
 	End If
 End Function
 
